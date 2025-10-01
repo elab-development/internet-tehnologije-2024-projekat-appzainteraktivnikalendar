@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,8 +18,16 @@ class SpecializationFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory()->create(['role' => 'doctor'])->id,
-            'name' => $this->faker->randomElement(['Kardiolog', 'Dermatolog', 'Neurolog']),
+            // user_id se prosleđuje iz seeder-a
+            'name' => $this->faker->randomElement([
+                'Kardiolog',
+                'Dermatolog',
+                'Pedijatar',
+                'Oftalmolog',
+                'Ortoped',
+                'Psihijatar',
+                'Stomatolog'
+            ]),
         ];
     }
 }

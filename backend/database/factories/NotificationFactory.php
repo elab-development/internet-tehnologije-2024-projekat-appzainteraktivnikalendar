@@ -17,7 +17,7 @@ class NotificationFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            // user_id se prosleđuje iz seeder-a
             'message' => $this->faker->sentence(),
             'sent' => $this->faker->boolean(),
         ];

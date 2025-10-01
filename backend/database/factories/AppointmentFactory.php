@@ -20,11 +20,10 @@ class AppointmentFactory extends Factory
         $patient = \App\Models\User::factory()->create(['role' => 'patient']);
 
         return [
-            'doctor_id' => $doctor->id,
-            'patient_id' => $patient->id,
-            'start_time' => $this->faker->dateTimeBetween('+1 days', '+2 days'),
-            'end_time' => $this->faker->dateTimeBetween('+2 days', '+3 days'),
-            'status' => $this->faker->randomElement(['scheduled', 'canceled', 'finished']),
+            // doctor_id i patient_id se prosleđuju iz seeder-a
+            'start_time' => $this->faker->dateTimeBetween('+1 days', '+10 days'),
+            'end_time' => $this->faker->dateTimeBetween('+1 days', '+10 days'),
+            'status' => $this->faker->randomElement(['scheduled','canceled','finished']),
             'note' => $this->faker->sentence(),
         ];
     }

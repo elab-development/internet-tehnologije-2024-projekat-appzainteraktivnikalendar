@@ -17,8 +17,8 @@ class DoctorScheduleFactory extends Factory
     public function definition(): array
     {
         return [
-            'doctor_id' => \App\Models\User::factory()->create(['role' => 'doctor'])->id,
-            'day_of_week' => $this->faker->randomElement(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
+            // doctor_id se prosleđuje iz seeder-a
+            'day_of_week' => $this->faker->randomElement(['monday','tuesday','wednesday','thursday','friday']),
             'start_time' => $this->faker->time('H:i', '09:00'),
             'end_time' => $this->faker->time('H:i', '17:00'),
         ];
