@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('specializations', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('color')->nullable();
             $table->timestamps();
         });
