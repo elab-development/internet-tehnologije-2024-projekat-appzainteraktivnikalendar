@@ -18,9 +18,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'role',
+        'phone',
+        'specialty_id'
     ];
 
     /**
@@ -32,6 +36,30 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+    public function specialization()
+    {
+        return $this->belongsTo(Specialization::class);
+    }
+
+    public function doctorSchedules()
+    {
+        return $this->hasMany(DoctorSchedule::class, 'doctor_id');
+    }
+
+    public function appointmentsAsDoctor()
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id');
+    }
+
+    public function appointmentsAsPatient()
+    {
+        return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 
     /**
      * Get the attributes that should be cast.
