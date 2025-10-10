@@ -39,7 +39,7 @@ class User extends Authenticatable
     ];
     public function specialization()
     {
-        return $this->belongsTo(Specialization::class);
+        return $this->belongsTo(Specialization::class, 'specialty_id');
     }
 
     public function doctorSchedules()
