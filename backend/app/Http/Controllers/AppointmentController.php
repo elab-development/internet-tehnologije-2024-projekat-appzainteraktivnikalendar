@@ -218,4 +218,76 @@ class AppointmentController extends Controller
         ], 201);
     }
 
+    public function updateAppointment(Request $request, $appointmentId)
+    {
+        $request->validate([
+            'new_start_time' => 'required|date_format:Y-m-d H:i',
+        ]);
+
+        $user = Auth::user();
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('patient_id', $user->id)
+            ->firstOrFail();
+
+        $newStart = Carbon::parse($request->new_start_time);
+        $doctorId = $appointment->doctor_id;
+
+        // 1. Ne može menjati prošle termine
+        if ($appointment->start_time < now()) {
+            return response()->json(['message' => 'Cannot modify a past appointment.'], 400);
+        }
+
+        // 2. Ako je vreme isto kao pre — nema promene
+        if ($newStart->equalTo(Carbon::parse($appointment->start_time))) {
+            return response()->json(['message' => 'No changes detected.'], 400);
+        }
+        // 3. Samo zakazani termini mogu da se menjaju
+        if ($appointment->status !== 'scheduled') {
+            return response()->json(['message' => 'Only scheduled appointments can be modified.'], 400);
+        }
+
+        // 4. Termin mora biti u budućnosti
+        if ($newStart->isPast()) {
+            return response()->json(['message' => 'Cannot move appointment to the past.'], 400);
+        }
+
+        // 5. Provera radnog vremena doktora
+        $dayOfWeek = $newStart->format('l');
+        $schedule = DoctorSchedule::where('doctor_id', $doctorId)
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if (!$schedule) {
+            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
+        }
+
+        $appointmentStartTime = $newStart->format('H:i');
+        $appointmentEndTimeStr = $newStart->copy()->addMinutes(30)->format('H:i');
+        $startOfWork = Carbon::parse($schedule->start_time)->format('H:i');
+        $endOfWork = Carbon::parse($schedule->end_time)->format('H:i');
+
+        if ($appointmentStartTime < $startOfWork || $appointmentEndTimeStr > $endOfWork) {
+            return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
+        }
+
+        // 5. Proveri da li je termin već zauzet
+        $exists = Appointment::where('doctor_id', $doctorId)
+            ->where('id', '!=', $appointment->id)
+            ->where('start_time', $newStart)
+            ->whereIn('status', ['scheduled', 'rejected'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Selected time is no longer available.'], 400);
+        }
+
+        // 6. Ažuriraj termin
+        $appointment->update([
+            'start_time' => $newStart,
+            'end_time' => $newStart->copy()->addMinutes(30)
+        ]);
+
+        // 7. Vrati ažurirani termin kroz resource
+        return new PatientAppointmentResource($appointment);
+    }
 }

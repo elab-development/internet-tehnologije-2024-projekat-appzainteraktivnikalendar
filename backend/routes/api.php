@@ -14,11 +14,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // PACIJENT RUTE
     Route::prefix('patient')->middleware('role:patient')->group(function () {
+        // prikaz licnog kalendara
         Route::get('/appointments', [AppointmentController::class, 'getPatientAppointments']);
+        // Zakazivanje
         Route::get('/available-specializations', [AppointmentController::class, 'getAvailableSpecializations']);
         Route::get('/available-doctors', [AppointmentController::class, 'getAvailableDoctors']);
         Route::get('/doctors/{doctor_id}/available-times', [AppointmentController::class, 'getAvailableTimes']);
         Route::post('/appointments', [AppointmentController::class, 'bookAppointment']);
+        Route::put('/appointments/{appointment_id}', [AppointmentController::class, 'updateAppointment']);
     });
 
     // DOKTOR RUTE
@@ -26,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // npr. Route::get('/appointments', [AppointmentController::class, 'getDoctorAppointments']);
     });
 
-    // DMIN RUTE
+    // ADMIN RUTE
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         // npr. Route::post('/create-doctor', [AdminController::class, 'createDoctor']);
     });
