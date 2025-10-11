@@ -15,6 +15,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // PACIJENT RUTE
     Route::prefix('patient')->middleware('role:patient')->group(function () {
         Route::get('/appointments', [AppointmentController::class, 'getPatientAppointments']);
+        Route::get('/available-specializations', [AppointmentController::class, 'getAvailableSpecializations']);
+
     });
 
     // DOKTOR RUTE

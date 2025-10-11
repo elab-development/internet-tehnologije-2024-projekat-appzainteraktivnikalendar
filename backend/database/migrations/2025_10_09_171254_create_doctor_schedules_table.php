@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->time('start_time');
             $table->time('end_time');
             $table->timestamps();
+            $table->unique(['doctor_id', 'day_of_week']);
         });
     }
 

@@ -13,6 +13,13 @@ class DoctorScheduleSeeder extends Seeder
      */
     public function run(): void
     {
-        DoctorSchedule::factory(20)->create();
+        for ($i = 0; $i < 100; $i++) {
+            try {
+                DoctorSchedule::factory()->create();
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                // skip duplicates silently
+                continue;
+            }
+        }
     }
 }
