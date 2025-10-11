@@ -290,4 +290,42 @@ class AppointmentController extends Controller
         // 7. Vrati ažurirani termin kroz resource
         return new PatientAppointmentResource($appointment);
     }
+
+    public function cancelAppointment($appointmentId)
+    {
+        $user = Auth::user();
+
+        // 1. Pronađi termin koji pripada pacijentu
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('patient_id', $user->id)
+            ->firstOrFail();
+
+        $startTime = Carbon::parse($appointment->start_time);
+
+        // 2. Proveri da li je termin već prošao
+        if ($startTime->isPast()) {
+            return response()->json(['message' => 'Cannot cancel a past appointment.'], 400);
+        }
+
+        // 3. Proveri status termina
+        if ($appointment->status !== 'scheduled') {
+            return response()->json(['message' => 'Only scheduled appointments can be cancelled.'], 400);
+        }
+
+        // 4. Ne može se otkazati ako je manje od 1h do termina
+        if (now()->diffInMinutes($startTime) < 60) {
+            return response()->json(['message' => 'Cannot cancel less than 1 hour before the appointment.'], 400);
+        }
+
+        // 5. Ažuriraj status termina
+        $appointment->update([
+            'status' => 'canceled',
+        ]);
+
+        // 6. Vrati JSON odgovor kroz resource
+        return response()->json([
+            'message' => 'Appointment cancelled successfully.',
+            'appointment' => new PatientAppointmentResource($appointment),
+        ], 200);
+    }
 }
