@@ -328,4 +328,45 @@ class AppointmentController extends Controller
             'appointment' => new PatientAppointmentResource($appointment),
         ], 200);
     }
+
+    public function exportAppointments()
+    {
+        $user = Auth::user();
+
+        // Učitavamo termine pacijenta samo sa statusom scheduled ili completed
+        $appointments = Appointment::with('doctor.specialization')
+            ->where('patient_id', $user->id)
+            ->whereIn('status', ['scheduled', 'completed'])
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        if ($appointments->isEmpty()) {
+            return response()->json(['message' => 'No appointments to export.'], 404);
+        }
+
+        // Generišemo .ics sadržaj
+        $icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MyClinicApp//Appointments//EN\r\n";
+
+        foreach ($appointments as $appointment) {
+            $start = Carbon::parse($appointment->start_time)->format('Ymd\THis');
+            $end = Carbon::parse($appointment->end_time)->format('Ymd\THis');
+            $summary = "Appointment with Dr. {$appointment->doctor->first_name} {$appointment->doctor->last_name} ({$appointment->doctor->specialization->name})";
+            $description = "Status: {$appointment->status}\\nNote: " . ($appointment->note ?? '');
+
+            $icsContent .= "BEGIN:VEVENT\r\n";
+            $icsContent .= "UID:appointment-{$appointment->id}@myclinicapp.local\r\n";
+            $icsContent .= "DTSTAMP:" . now()->format('Ymd\THis') . "\r\n";
+            $icsContent .= "DTSTART:{$start}\r\n";
+            $icsContent .= "DTEND:{$end}\r\n";
+            $icsContent .= "SUMMARY:{$summary}\r\n";
+            $icsContent .= "DESCRIPTION:{$description}\r\n";
+            $icsContent .= "END:VEVENT\r\n";
+        }
+
+        $icsContent .= "END:VCALENDAR\r\n";
+
+        return response($icsContent, 200)
+            ->header('Content-Type', 'text/calendar')
+            ->header('Content-Disposition', 'attachment; filename="appointments.ics"');
+    }
 }
