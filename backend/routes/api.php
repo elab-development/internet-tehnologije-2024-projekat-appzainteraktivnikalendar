@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/available-specializations', [AppointmentController::class, 'getAvailableSpecializations']);
         Route::get('/available-doctors', [AppointmentController::class, 'getAvailableDoctors']);
         Route::get('/doctors/{doctor_id}/available-times', [AppointmentController::class, 'getAvailableTimes']);
-
+        Route::post('/appointments', [AppointmentController::class, 'bookAppointment']);
     });
 
     // DOKTOR RUTE

@@ -158,4 +158,64 @@ class AppointmentController extends Controller
         ]);
     }
 
+    public function bookAppointment(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'required|exists:users,id',
+            'start_time' => 'required|date_format:Y-m-d H:i',
+        ]);
+
+        $user = Auth::user();
+        $doctorId = $request->doctor_id;
+        $startTime = Carbon::parse($request->start_time);
+
+        // 1. Proveri da li je datum u budućnosti
+        if ($startTime->isPast()) {
+            return response()->json(['message' => 'Cannot book an appointment in the past.'], 400);
+        }
+
+        // 2. Proveri da li doktor radi taj dan i u to vreme
+        $dayOfWeek = $startTime->format('l');
+        $schedule = DoctorSchedule::where('doctor_id', $doctorId)
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if (!$schedule) {
+            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
+        }
+
+        $appointmentStartTime = $startTime->format('H:i');
+        $appointmentEndTime = $startTime->copy()->addMinutes(30)->format('H:i');
+        $startOfWork = Carbon::parse($schedule->start_time)->format('H:i');
+        $endOfWork = Carbon::parse($schedule->end_time)->format('H:i');
+
+        if ($appointmentStartTime < $startOfWork || $appointmentEndTime > $endOfWork) {
+            return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
+        }
+
+        // 3. Proveri da li termin već nije zakazan ili odbijen
+        $exists = Appointment::where('doctor_id', $doctorId)
+            ->where('start_time', $startTime)
+            ->whereIn('status', ['scheduled', 'rejected'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Selected time is no longer available.'], 400);
+        }
+
+        // 4. Kreiraj termin
+        $appointment = Appointment::create([
+            'doctor_id' => $doctorId,
+            'patient_id' => $user->id,
+            'start_time' => $startTime,
+            'end_time' => $startTime->copy()->addMinutes(30), // fiksno 30 min
+            'status' => 'scheduled',
+        ]);
+
+        return response()->json([
+            'message' => 'Appointment booked successfully.',
+            'appointment' => new PatientAppointmentResource($appointment),
+        ], 201);
+    }
+
 }
