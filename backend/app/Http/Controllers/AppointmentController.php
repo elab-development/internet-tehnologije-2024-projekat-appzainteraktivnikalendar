@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\DoctorSchedule;
 use App\Models\Specialization;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Http\Resources\PatientAppointmentResource;
 use Illuminate\Support\Facades\Auth;
+use Log;
 
 class AppointmentController extends Controller
 {
@@ -74,6 +76,34 @@ class AppointmentController extends Controller
         }
 
         return response()->json($specializations);
+    }
+
+    public function getAvailableDoctors(Request $request)
+    {
+        $date = $request->query('date');
+        $specializationId = $request->query('specialization_id');
+
+        if (!$date || !$specializationId) {
+            return response()->json(['message' => 'Date and specialization_id are required.'], 400);
+        }
+
+        $dayOfWeek = strtolower(Carbon::parse($date)->format('l'));
+        // Lekari koji rade tog dana
+        $doctorIds = DoctorSchedule::where('day_of_week', $dayOfWeek)
+            ->pluck('doctor_id')
+            ->unique();
+
+        // Filtriramo samo one sa izabranom specijalnošću
+        $availableDoctors = User::whereIn('id', $doctorIds)
+            ->where('role', 'doctor')
+            ->where('specialty_id', $specializationId)
+            ->get(['id', 'first_name', 'last_name']);
+
+        if ($availableDoctors->isEmpty()) {
+            return response()->json(['message' => 'No doctors available for this specialization on this date.'], 200);
+        }
+
+        return response()->json($availableDoctors);
     }
 
 }
