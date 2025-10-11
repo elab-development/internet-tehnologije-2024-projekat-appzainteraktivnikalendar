@@ -369,4 +369,22 @@ class AppointmentController extends Controller
             ->header('Content-Type', 'text/calendar')
             ->header('Content-Disposition', 'attachment; filename="appointments.ics"');
     }
+
+    public function getAppointmentHistory(Request $request)
+    {
+        $user = Auth::user();
+
+        // Uzmi samo termine sa statusom 'completed' (prošli pregledi)
+        $appointments = Appointment::with('doctor.specialization')
+            ->where('patient_id', $user->id)
+            ->where('status', 'completed')
+            ->orderBy('start_time', 'desc')
+            ->paginate(10); // 10 redova po strani
+
+        // Ako nema rezultata, paginacija će vratiti praznu stranicu
+        return PatientAppointmentResource::collection($appointments)
+            ->additional([
+                'message' => $appointments->count() ? 'History loaded successfully.' : 'No completed appointments found.'
+            ]);
+    }
 }

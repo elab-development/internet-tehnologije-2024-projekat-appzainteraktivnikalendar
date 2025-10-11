@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/appointments/{appointment_id}/cancel', [AppointmentController::class, 'cancelAppointment']);
         // eksport termina u .ics fajl
         Route::get('/appointments/export', [AppointmentController::class, 'exportAppointments']);
+        // istorija pregleda
+        Route::get('/history', [AppointmentController::class, 'getAppointmentHistory']);
     });
 
     // DOKTOR RUTE
