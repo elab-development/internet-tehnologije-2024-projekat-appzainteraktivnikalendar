@@ -106,4 +106,56 @@ class AppointmentController extends Controller
         return response()->json($availableDoctors);
     }
 
+    public function getAvailableTimes($doctorId, Request $request)
+    {
+        $date = $request->query('date');
+        if (!$date) {
+            return response()->json(['message' => 'Date is required.'], 400);
+        }
+        // datum mora biti u budućnosti
+        $requestedDate = Carbon::parse($date);
+        if ($requestedDate->isPast()) {
+            return response()->json(['message' => 'Date must be in the future.'], 400);
+        }
+
+        // Odredi koji je dan u nedelji (npr. Monday)
+        $dayOfWeek = date('l', strtotime($date));
+
+        // Nađi raspored rada doktora za taj dan
+        $schedule = DoctorSchedule::where('doctor_id', $doctorId)
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if (!$schedule) {
+            return response()->json(['message' => 'Doctor does not work on this day.'], 404);
+        }
+
+        // Dohvati termine tog doktora za taj dan
+        $appointments = Appointment::where('doctor_id', $doctorId)
+            ->whereDate('start_time', $date)
+            ->whereIn('status', ['scheduled', 'rejected'])
+            ->get()
+            ->map(fn($appt) => Carbon::parse($appt->start_time)->format('H:i'))
+            ->toArray();
+
+        // Generiši sve moguće termine na osnovu njegovog rasporeda
+        $availableSlots = [];
+        $current = strtotime($schedule->start_time);
+        $end = strtotime($schedule->end_time);
+
+        while ($current < $end) {
+            $slot = date('H:i', $current);
+            if (!in_array($slot, $appointments)) {
+                $availableSlots[] = $slot;
+            }
+            $current = strtotime('+30 minutes', $current);
+        }
+
+        return response()->json([
+            'doctor_id' => $doctorId,
+            'date' => $date,
+            'available_times' => $availableSlots,
+        ]);
+    }
+
 }
