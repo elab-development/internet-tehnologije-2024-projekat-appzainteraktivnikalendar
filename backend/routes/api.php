@@ -33,7 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // DOKTOR RUTE
     Route::prefix('doctor')->middleware('role:doctor')->group(function () {
-        // npr. Route::get('/appointments', [AppointmentController::class, 'getDoctorAppointments']);
+        // prikaz licnog kalendara
+        Route::get('/appointments', [AppointmentController::class, 'getDoctorAppointments']);
     });
 
     // ADMIN RUTE

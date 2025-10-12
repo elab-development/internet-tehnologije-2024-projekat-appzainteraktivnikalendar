@@ -21,9 +21,9 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'role' => $this->role,
-            'specialty' => $this->specialty ? [
-                'id' => $this->specialty->id,
-                'name' => $this->specialty->name,
+            'specialization' => $this->specialization ? [
+                'id' => $this->specialization->id,
+                'name' => $this->specialization->name,
             ] : null,
         ];
     }

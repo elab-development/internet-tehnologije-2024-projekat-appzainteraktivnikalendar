@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DoctorAppointmentResource;
 use App\Models\DoctorSchedule;
 use App\Models\Specialization;
 use App\Models\User;
@@ -18,12 +19,13 @@ class AppointmentController extends Controller
     {
         $user = Auth::user();
 
-        // 1️⃣ Upit za termine pacijenta
+        // 1. Upit za termine pacijenta — samo scheduled i completed
         $query = Appointment::with('doctor.specialization')
             ->where('patient_id', $user->id)
+            ->whereIn('status', ['scheduled', 'completed'])
             ->orderBy('start_time', 'asc');
 
-        // 2️⃣ Filtriranje po jednoj ili više specijalnosti (SK4)
+        // 2. Filtriranje po jednoj ili više specijalnosti (SK4)
         if ($request->filled('specialization_ids')) {
             $query->whereHas('doctor.specialization', function ($q) use ($request) {
                 $q->whereIn('id', $request->specialization_ids);
@@ -32,10 +34,10 @@ class AppointmentController extends Controller
 
         $appointments = $query->get();
 
-        // 3️⃣ Vraćamo sve specijalnosti lekara (ne filtrirane)
+        // 3. Vraćamo sve specijalnosti lekara (ne filtrirane)
         $specializations = Specialization::select('id', 'name', 'color')->get();
 
-        // 4️⃣ Vraćamo sve zajedno
+        // 4. Vraćamo sve zajedno
         return response()->json([
             'appointments' => PatientAppointmentResource::collection($appointments),
             'specializations' => $specializations
@@ -386,5 +388,18 @@ class AppointmentController extends Controller
             ->additional([
                 'message' => $appointments->count() ? 'History loaded successfully.' : 'No completed appointments found.'
             ]);
+    }
+
+    public function getDoctorAppointments()
+    {
+        $user = Auth::user();
+
+        $appointments = Appointment::where('doctor_id', $user->id)
+            ->whereIn('status', ['scheduled', 'completed'])
+            ->with(['patient']) // učitamo celu pacijent relaciju
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        return DoctorAppointmentResource::collection($appointments);
     }
 }
