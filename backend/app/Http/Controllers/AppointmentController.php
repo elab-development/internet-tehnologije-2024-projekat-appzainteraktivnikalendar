@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\DoctorAppointmentResource;
+use App\Mail\AppointmentRejectedMail;
 use App\Models\DoctorSchedule;
 use App\Models\Specialization;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use App\Models\Appointment;
 use App\Http\Resources\PatientAppointmentResource;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Log;
 
 class AppointmentController extends Controller
@@ -401,5 +404,40 @@ class AppointmentController extends Controller
             ->get();
 
         return DoctorAppointmentResource::collection($appointments);
+    }
+
+    public function rejectAppointment(Request $request, $appointmentId)
+    {
+        $user = Auth::user(); // trenutno ulogovani doktor
+
+        // 1. Dohvati termin i proveri da pripada doktoru
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('doctor_id', $user->id)
+            ->firstOrFail();
+
+        // 2. Proveri da li je termin u statusu 'scheduled'
+        if ($appointment->status !== 'scheduled') {
+            return response()->json(['message' => 'Only scheduled appointments can be rejected.'], 400);
+        }
+
+        // 3. Odbij termin
+        $appointment->update([
+            'status' => 'rejected'
+        ]);
+
+        // 4. Pošalji email pacijentu
+        try {
+            Mail::to($appointment->patient->email)
+                ->send(new AppointmentRejectedMail($appointment));
+        } catch (Exception $e) {
+            // Loguj grešku, ali ne prekidaj
+            Log::error('Failed to send appointment rejection email: ' . $e->getMessage());
+        }
+
+        // 5. Vrati poruku doktoru
+        return response()->json([
+            'message' => 'Appointment successfully rejected.',
+            'appointment' => $appointment
+        ]);
     }
 }

@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('doctor')->middleware('role:doctor')->group(function () {
         // prikaz licnog kalendara
         Route::get('/appointments', [AppointmentController::class, 'getDoctorAppointments']);
+        Route::post('/appointments/{appointment}/reject', [AppointmentController::class, 'rejectAppointment']);
     });
 
     // ADMIN RUTE
