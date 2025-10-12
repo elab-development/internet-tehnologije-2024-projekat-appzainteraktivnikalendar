@@ -35,13 +35,13 @@ class AppointmentFactory extends Factory
         $date = $this->faker->dateTimeBetween('next ' . ucfirst($dayOfWeek), '+1 month');
 
         // 4. Generate available slots
-        $startTime = strtotime($schedule->start_time);
-        $endTime = strtotime($schedule->end_time);
+        $startTime = $schedule->start_time->getTimestamp();
+        $endTime = $schedule->end_time->getTimestamp();
 
         $existingAppointments = Appointment::where('doctor_id', $doctor->id)
             ->whereDate('start_time', $date)
             ->pluck('start_time')
-            ->map(fn($t) => date('H:i', strtotime($t)))
+            ->map(fn($t) => $t->format('H:i'))
             ->toArray();
 
         $slots = [];

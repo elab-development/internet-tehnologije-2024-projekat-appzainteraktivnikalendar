@@ -124,7 +124,7 @@ class AppointmentController extends Controller
         }
 
         // Odredi koji je dan u nedelji (npr. Monday)
-        $dayOfWeek = date('l', strtotime($date));
+        $dayOfWeek = $requestedDate->format('l');
 
         // Nađi raspored rada doktora za taj dan
         $schedule = DoctorSchedule::where('doctor_id', $doctorId)
@@ -138,15 +138,15 @@ class AppointmentController extends Controller
         // Dohvati termine tog doktora za taj dan
         $appointments = Appointment::where('doctor_id', $doctorId)
             ->whereDate('start_time', $date)
-            ->whereIn('status', ['scheduled', 'rejected'])
+            ->whereIn('status', ['scheduled', 'rejected', 'completed']) // zauzeti termini
             ->get()
-            ->map(fn($appt) => Carbon::parse($appt->start_time)->format('H:i'))
+            ->map(fn($appt) => $appt->start_time->format('H:i'))
             ->toArray();
 
         // Generiši sve moguće termine na osnovu njegovog rasporeda
         $availableSlots = [];
-        $current = strtotime($schedule->start_time);
-        $end = strtotime($schedule->end_time);
+        $current = $schedule->start_time->getTimestamp();
+        $end = $schedule->end_time->getTimestamp();
 
         while ($current < $end) {
             $slot = date('H:i', $current);
@@ -191,8 +191,8 @@ class AppointmentController extends Controller
 
         $appointmentStartTime = $startTime->format('H:i');
         $appointmentEndTime = $startTime->copy()->addMinutes(30)->format('H:i');
-        $startOfWork = Carbon::parse($schedule->start_time)->format('H:i');
-        $endOfWork = Carbon::parse($schedule->end_time)->format('H:i');
+        $startOfWork = $schedule->start_time->format('H:i');
+        $endOfWork = $schedule->end_time->format('H:i');
 
         if ($appointmentStartTime < $startOfWork || $appointmentEndTime > $endOfWork) {
             return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
@@ -238,12 +238,12 @@ class AppointmentController extends Controller
         $doctorId = $appointment->doctor_id;
 
         // 1. Ne može menjati prošle termine
-        if ($appointment->start_time < now()) {
+        if ($appointment->start_time->isPast()) {
             return response()->json(['message' => 'Cannot modify a past appointment.'], 400);
         }
 
         // 2. Ako je vreme isto kao pre — nema promene
-        if ($newStart->equalTo(Carbon::parse($appointment->start_time))) {
+        if ($newStart->equalTo($appointment->start_time)) {
             return response()->json(['message' => 'No changes detected.'], 400);
         }
         // 3. Samo zakazani termini mogu da se menjaju
@@ -268,8 +268,8 @@ class AppointmentController extends Controller
 
         $appointmentStartTime = $newStart->format('H:i');
         $appointmentEndTimeStr = $newStart->copy()->addMinutes(30)->format('H:i');
-        $startOfWork = Carbon::parse($schedule->start_time)->format('H:i');
-        $endOfWork = Carbon::parse($schedule->end_time)->format('H:i');
+        $startOfWork = $schedule->start_time->format('H:i');
+        $endOfWork = $schedule->end_time->format('H:i');
 
         if ($appointmentStartTime < $startOfWork || $appointmentEndTimeStr > $endOfWork) {
             return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
@@ -304,9 +304,7 @@ class AppointmentController extends Controller
         $appointment = Appointment::where('id', $appointmentId)
             ->where('patient_id', $user->id)
             ->firstOrFail();
-
-        $startTime = Carbon::parse($appointment->start_time);
-
+        $startTime = $appointment->start_time;
         // 2. Proveri da li je termin već prošao
         if ($startTime->isPast()) {
             return response()->json(['message' => 'Cannot cancel a past appointment.'], 400);
@@ -353,8 +351,8 @@ class AppointmentController extends Controller
         $icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MyClinicApp//Appointments//EN\r\n";
 
         foreach ($appointments as $appointment) {
-            $start = Carbon::parse($appointment->start_time)->format('Ymd\THis');
-            $end = Carbon::parse($appointment->end_time)->format('Ymd\THis');
+            $start = $appointment->start_time->format('Ymd\THis');
+            $end = $appointment->end_time->format('Ymd\THis');
             $summary = "Appointment with Dr. {$appointment->doctor->first_name} {$appointment->doctor->last_name} ({$appointment->doctor->specialization->name})";
             $description = "Status: {$appointment->status}\\nNote: " . ($appointment->note ?? '');
 

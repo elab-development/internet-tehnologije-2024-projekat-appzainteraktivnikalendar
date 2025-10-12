@@ -43,7 +43,7 @@ class AppointmentRejectedMail extends Mailable
             markdown: 'emails.appointment_rejected',
             with: [
                 'doctorName' => $this->appointment->doctor->first_name . ' ' . $this->appointment->doctor->last_name,
-                'startTime' => Carbon::parse($this->appointment->start_time)->format('d.m.Y H:i'),
+                'startTime' => $this->appointment->start_time->format('d.m.Y H:i'),
             ],
         );
     }

@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\DoctorSchedule;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Carbon\Carbon;
 
 class DoctorScheduleFactory extends Factory
 {
@@ -14,20 +15,16 @@ class DoctorScheduleFactory extends Factory
     {
         $doctor = User::where('role', 'doctor')->inRandomOrder()->first();
 
-        // allowed hours (07:00 to 19:00)
-        $startHour = $this->faker->numberBetween(7, 18); // latest start at 18:30
+        $startHour = $this->faker->numberBetween(7, 18);
         $startMinute = $this->faker->randomElement([0, 30]);
-        $start = sprintf('%02d:%02d:00', $startHour, $startMinute);
+        $carbonStart = Carbon::today()->setTime($startHour, $startMinute);
+        $maxIncrements = (19 - $startHour) * 2;
+        $increments = $this->faker->numberBetween(1, $maxIncrements > 0 ? $maxIncrements : 1);
+        $carbonEnd = $carbonStart->copy()->addMinutes($increments * 30);
+        $capTime = Carbon::today()->setTime(19, 0, 0);
 
-        // generate end time (must be after start)
-        // pick a random number of 30-min increments, at least 1
-        $increments = $this->faker->numberBetween(1, (19 - $startHour) * 2);
-        $endTimestamp = strtotime($start) + ($increments * 30 * 60);
-        $end = date('H:i:s', $endTimestamp);
-
-        // cap at 19:00 if it goes over
-        if (strtotime($end) > strtotime('19:00:00')) {
-            $end = '19:00:00';
+        if ($carbonEnd->greaterThan($capTime)) {
+            $carbonEnd = $capTime;
         }
 
         return [
@@ -41,8 +38,8 @@ class DoctorScheduleFactory extends Factory
                 'saturday',
                 'sunday'
             ]),
-            'start_time' => $start,
-            'end_time' => $end,
+            'start_time' => $carbonStart->format('H:i:s'),
+            'end_time' => $carbonEnd->format('H:i:s'),
         ];
     }
 }
