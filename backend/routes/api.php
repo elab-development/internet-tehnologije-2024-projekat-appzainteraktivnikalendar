@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminDoctorController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ADMIN RUTE
     Route::prefix('admin')->middleware('role:admin')->group(function () {
-        // npr. Route::post('/create-doctor', [AdminController::class, 'createDoctor']);
+        // rest
+        Route::resource('doctors', AdminDoctorController::class)->only(['index', 'show', 'store', 'destroy']);
     });
 });
