@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/appointments/{appointment}/reject', [AppointmentController::class, 'rejectAppointment']);
         // završavanje termina, tj. unos napomene
         Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'completeAppointment']);
+        // prikaz liste prethodnih pregleda
+        Route::get('/history', [AppointmentController::class, 'getCompletedAppointments']);
     });
 
     // ADMIN RUTE

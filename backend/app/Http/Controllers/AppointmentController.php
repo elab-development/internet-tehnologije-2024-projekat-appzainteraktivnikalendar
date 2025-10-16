@@ -477,4 +477,26 @@ class AppointmentController extends Controller
         // 5. Povratna poruka
         return response()->json(['message' => 'Appointment successfully marked as completed.']);
     }
+
+    public function getCompletedAppointments(Request $request)
+    {
+        $doctorId = auth()->id();
+        $search = $request->query('search');
+
+        $query = Appointment::with('patient')
+            ->where('doctor_id', $doctorId)
+            ->where('status', 'completed');
+
+        if ($search) {
+            $query->whereHas('patient', function ($q) use ($search) {
+                $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        $appointments = $query->orderByDesc('start_time')->paginate(10);
+
+        return DoctorAppointmentResource::collection($appointments);
+    }
 }
