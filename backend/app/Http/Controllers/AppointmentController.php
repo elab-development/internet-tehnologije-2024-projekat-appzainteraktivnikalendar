@@ -3,22 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\DoctorAppointmentResource;
+use App\Http\Resources\PatientAppointmentResource;
 use App\Mail\AppointmentCompletedMail;
 use App\Mail\AppointmentRejectedMail;
+use App\Models\Appointment;
 use App\Models\DoctorSchedule;
 use App\Models\Specialization;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use App\Models\Appointment;
-use App\Http\Resources\PatientAppointmentResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Log;
 
+/**
+ * Class AppointmentController
+ * * @package App\Http\Controllers
+ * * Kontroler zadužen za svu logiku zakazivanja, izmene, otkazivanja i 
+ * pregleda termina, kako za pacijente tako i za doktore.
+ */
 class AppointmentController extends Controller
 {
+    /**
+     * Dohvata zakazane i završene termine za prijavljenog pacijenta.
+     * Omogućava filtriranje po specijalizaciji (SK4).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getPatientAppointments(Request $request)
     {
         $user = Auth::user();
@@ -48,6 +61,12 @@ class AppointmentController extends Controller
         ]);
     }
 
+    /**
+     * Dohvata listu dostupnih specijalizacija na izabrani datum.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getAvailableSpecializations(Request $request)
     {
         $date = $request->query('date');
@@ -84,6 +103,12 @@ class AppointmentController extends Controller
         return response()->json($specializations);
     }
 
+    /**
+     * Dohvata listu doktora za izabranu specijalizaciju i datum.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getAvailableDoctors(Request $request)
     {
         $date = $request->query('date');
@@ -94,6 +119,7 @@ class AppointmentController extends Controller
         }
 
         $dayOfWeek = strtolower(Carbon::parse($date)->format('l'));
+
         // Lekari koji rade tog dana
         $doctorIds = DoctorSchedule::where('day_of_week', $dayOfWeek)
             ->pluck('doctor_id')
@@ -112,12 +138,21 @@ class AppointmentController extends Controller
         return response()->json($availableDoctors);
     }
 
+    /**
+     * Generiše listu slobodnih termina za određenog doktora i datum.
+     *
+     * @param int $doctorId
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getAvailableTimes($doctorId, Request $request)
     {
         $date = $request->query('date');
+
         if (!$date) {
             return response()->json(['message' => 'Date is required.'], 400);
         }
+
         // datum mora biti u budućnosti
         $requestedDate = Carbon::parse($date);
         if ($requestedDate->isPast()) {
@@ -136,7 +171,7 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Doctor does not work on this day.'], 404);
         }
 
-        // Dohvati termine tog doktora za taj dan
+        // Dohvati zauzete termine tog doktora za taj dan
         $appointments = Appointment::where('doctor_id', $doctorId)
             ->whereDate('start_time', $date)
             ->whereIn('status', ['scheduled', 'rejected', 'completed']) // zauzeti termini
@@ -144,7 +179,7 @@ class AppointmentController extends Controller
             ->map(fn($appt) => $appt->start_time->format('H:i'))
             ->toArray();
 
-        // Generiši sve moguće termine na osnovu njegovog rasporeda
+        // Generiši sve moguće termine na osnovu njegovog rasporeda (30 minuta)
         $availableSlots = [];
         $current = $schedule->start_time->getTimestamp();
         $end = $schedule->end_time->getTimestamp();
@@ -164,6 +199,12 @@ class AppointmentController extends Controller
         ]);
     }
 
+    /**
+     * Zakazuje novi termin.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function bookAppointment(Request $request)
     {
         $request->validate([
@@ -199,7 +240,7 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
         }
 
-        // 3. Proveri da li termin već nije zakazan ili odbijen
+        // 3. Proveri da li termin već nije zakazan ili odbijen (double-check)
         $exists = Appointment::where('doctor_id', $doctorId)
             ->where('start_time', $startTime)
             ->whereIn('status', ['scheduled', 'rejected'])
@@ -224,6 +265,13 @@ class AppointmentController extends Controller
         ], 201);
     }
 
+    /**
+     * Ažurira (menja datum/vreme) postojećeg zakazanog termina.
+     *
+     * @param Request $request
+     * @param int $appointmentId
+     * @return \Illuminate\Http\JsonResponse|\App\Http\Resources\PatientAppointmentResource
+     */
     public function updateAppointment(Request $request, $appointmentId)
     {
         $request->validate([
@@ -247,6 +295,7 @@ class AppointmentController extends Controller
         if ($newStart->equalTo($appointment->start_time)) {
             return response()->json(['message' => 'No changes detected.'], 400);
         }
+
         // 3. Samo zakazani termini mogu da se menjaju
         if ($appointment->status !== 'scheduled') {
             return response()->json(['message' => 'Only scheduled appointments can be modified.'], 400);
@@ -276,7 +325,7 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
         }
 
-        // 5. Proveri da li je termin već zauzet
+        // 6. Proveri da li je termin već zauzet (isključujući trenutni termin)
         $exists = Appointment::where('doctor_id', $doctorId)
             ->where('id', '!=', $appointment->id)
             ->where('start_time', $newStart)
@@ -287,16 +336,22 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Selected time is no longer available.'], 400);
         }
 
-        // 6. Ažuriraj termin
+        // 7. Ažuriraj termin
         $appointment->update([
             'start_time' => $newStart,
             'end_time' => $newStart->copy()->addMinutes(30)
         ]);
 
-        // 7. Vrati ažurirani termin kroz resource
+        // 8. Vrati ažurirani termin kroz resource
         return new PatientAppointmentResource($appointment);
     }
 
+    /**
+     * Otkazuje zakazani termin (samo za pacijente).
+     *
+     * @param int $appointmentId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function cancelAppointment($appointmentId)
     {
         $user = Auth::user();
@@ -305,7 +360,9 @@ class AppointmentController extends Controller
         $appointment = Appointment::where('id', $appointmentId)
             ->where('patient_id', $user->id)
             ->firstOrFail();
+
         $startTime = $appointment->start_time;
+
         // 2. Proveri da li je termin već prošao
         if ($startTime->isPast()) {
             return response()->json(['message' => 'Cannot cancel a past appointment.'], 400);
@@ -333,6 +390,11 @@ class AppointmentController extends Controller
         ], 200);
     }
 
+    /**
+     * Izvozi sve zakazane i završene termine u .ics (iCalendar) fajl.
+     *
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     */
     public function exportAppointments()
     {
         $user = Auth::user();
@@ -374,6 +436,12 @@ class AppointmentController extends Controller
             ->header('Content-Disposition', 'attachment; filename="appointments.ics"');
     }
 
+    /**
+     * Dohvata istoriju završenih pregleda za pacijenta.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function getAppointmentHistory(Request $request)
     {
         $user = Auth::user();
@@ -392,6 +460,11 @@ class AppointmentController extends Controller
             ]);
     }
 
+    /**
+     * Dohvata zakazane i završene termine za prijavljenog doktora.
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function getDoctorAppointments()
     {
         $user = Auth::user();
@@ -405,6 +478,13 @@ class AppointmentController extends Controller
         return DoctorAppointmentResource::collection($appointments);
     }
 
+    /**
+     * Odbija zakazani termin (samo za doktore).
+     *
+     * @param Request $request
+     * @param int $appointmentId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function rejectAppointment(Request $request, $appointmentId)
     {
         $user = Auth::user(); // trenutno ulogovani doktor
@@ -440,6 +520,13 @@ class AppointmentController extends Controller
         ]);
     }
 
+    /**
+     * Završava termin, postavlja status na 'completed' i dodaje napomenu.
+     *
+     * @param Request $request
+     * @param int $appointmentId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function completeAppointment(Request $request, $appointmentId)
     {
         $request->validate([
@@ -467,6 +554,7 @@ class AppointmentController extends Controller
             'status' => 'completed',
             'note' => $request->note,
         ]);
+
         // 4. Slanje email notifikacije pacijentu
         try {
             Mail::to($appointment->patient->email)->send(new AppointmentCompletedMail($appointment));
@@ -474,10 +562,17 @@ class AppointmentController extends Controller
             // Loguj grešku, ali ne prekidaj
             Log::error('Failed to send note email: ' . $e->getMessage());
         }
+
         // 5. Povratna poruka
         return response()->json(['message' => 'Appointment successfully marked as completed.']);
     }
 
+    /**
+     * Dohvata istoriju završenih pregleda za prijavljenog doktora.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function getCompletedAppointments(Request $request)
     {
         $doctorId = auth()->id();
@@ -489,6 +584,7 @@ class AppointmentController extends Controller
 
         if ($search) {
             $query->whereHas('patient', function ($q) use ($search) {
+                // Pretraga po celom imenu ili delu imena/prezimena
                 $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                     ->orWhere('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%");
