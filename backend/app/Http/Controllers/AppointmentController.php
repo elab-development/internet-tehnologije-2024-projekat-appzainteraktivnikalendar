@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\DoctorAppointmentResource;
+use App\Mail\AppointmentCompletedMail;
 use App\Mail\AppointmentRejectedMail;
 use App\Models\DoctorSchedule;
 use App\Models\Specialization;
@@ -437,5 +438,43 @@ class AppointmentController extends Controller
             'message' => 'Appointment successfully rejected.',
             'appointment' => $appointment
         ]);
+    }
+
+    public function completeAppointment(Request $request, $appointmentId)
+    {
+        $request->validate([
+            'note' => 'nullable|string|max:3000',
+        ]);
+
+        $user = Auth::user();
+
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('doctor_id', $user->id)
+            ->firstOrFail();
+
+        // 1. Termin mora biti zakazan
+        if ($appointment->status !== 'scheduled') {
+            return response()->json(['message' => 'Only scheduled appointments can be completed.'], 400);
+        }
+
+        // 2. Termin mora biti u prošlosti
+        if ($appointment->start_time->isFuture()) {
+            return response()->json(['message' => 'Appointment time has not passed yet.'], 400);
+        }
+
+        // 3. Ažuriranje termina
+        $appointment->update([
+            'status' => 'completed',
+            'note' => $request->note,
+        ]);
+        // 4. Slanje email notifikacije pacijentu
+        try {
+            Mail::to($appointment->patient->email)->send(new AppointmentCompletedMail($appointment));
+        } catch (Exception $e) {
+            // Loguj grešku, ali ne prekidaj
+            Log::error('Failed to send note email: ' . $e->getMessage());
+        }
+        // 5. Povratna poruka
+        return response()->json(['message' => 'Appointment successfully marked as completed.']);
     }
 }
