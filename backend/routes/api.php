@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminDoctorController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SpecializationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ADMIN RUTE
     Route::prefix('admin')->middleware('role:admin')->group(function () {
+        // lista specijalnosti
+        Route::get('/specializations', [SpecializationController::class, 'getSpecializations']);
         // rest
         Route::resource('doctors', AdminDoctorController::class)->only(['index', 'show', 'store', 'destroy']);
     });
