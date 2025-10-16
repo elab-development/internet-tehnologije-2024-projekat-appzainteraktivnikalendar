@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DoctorResource;
 use App\Http\Resources\DoctorSimpleResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -42,7 +43,8 @@ class AdminDoctorController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $doctor = User::where('role', 'doctor')->with('specialization', 'doctorSchedules')->findOrFail($id);
+        return new DoctorResource($doctor);
     }
 
     /**
