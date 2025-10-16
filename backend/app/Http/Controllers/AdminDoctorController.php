@@ -68,6 +68,20 @@ class AdminDoctorController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $doctor = User::where('role', 'doctor')->findOrFail($id);
+
+        $hasAppointments = $doctor->appointmentsAsDoctor()->whereIn('status', ['scheduled', 'completed'])->exists();
+        if ($hasAppointments) {
+            return response()->json([
+                'message' => 'Cannot delete doctor with scheduled or completed appointments.'
+            ], 400);
+        }
+        $deletedDoctor = new DoctorSimpleResource($doctor);
+        $doctor->delete();
+
+        return response()->json([
+            'message' => 'Doctor deleted successfully.',
+            'doctor' => $deletedDoctor
+        ]);
     }
 }
