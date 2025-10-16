@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\DoctorResource;
 use App\Http\Resources\DoctorSimpleResource;
+use App\Models\Specialization;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AdminDoctorController extends Controller
 {
@@ -35,7 +37,42 @@ class AdminDoctorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'phone' => 'nullable|string|max:20',
+            'specialty_id' => 'nullable|exists:specializations,id',
+            'new_specialty_name' => 'nullable|string|max:255',
+            'new_specialty_color' => 'nullable|string|max:7',
+        ]);
+
+        // Ako admin šalje novu specijalnost
+        if ($request->filled('new_specialty_name') && $request->filled('new_specialty_color')) {
+            $specialty = Specialization::create([
+                'name' => $request->new_specialty_name,
+                'color' => $request->new_specialty_color,
+            ]);
+            $specialtyId = $specialty->id;
+        } else {
+            $specialtyId = $request->specialty_id;
+        }
+
+        $doctor = User::create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'role' => 'doctor',
+            'specialty_id' => $specialtyId,
+        ]);
+
+        return response()->json([
+            'message' => 'Doctor created successfully',
+            'doctor' => new DoctorSimpleResource($doctor)
+        ], 201);
     }
 
     /**
