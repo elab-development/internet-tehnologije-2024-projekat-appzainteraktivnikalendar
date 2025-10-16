@@ -14,12 +14,33 @@ class AdminDoctorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $doctors = User::with('specialization')
-            ->where('role', 'doctor')
-            ->orderBy('last_name', 'asc')
-            ->paginate(10);
+        $search = $request->query('search');
+        $specialtyId = $request->query('specialty_id');
+
+        $query = User::with('specialization')
+            ->where('role', 'doctor');
+
+        // Filter po specijalnosti
+        if ($specialtyId) {
+            $query->where('specialty_id', $specialtyId);
+        }
+
+        // Search po ime/prezime/email/phone
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $doctors = $query->orderBy('last_name', 'asc')
+            ->orderBy('first_name', 'asc')
+            ->paginate(10)
+            ->appends($request->query()); // da se query parametri zadrže pri paginaciji
 
         return DoctorSimpleResource::collection($doctors);
     }
