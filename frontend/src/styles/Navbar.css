@@ -61,3 +61,26 @@
 .navbar-links a:hover::after {
   width: 100%;
 }
+
+.navbar-links a.active {
+  color: #007bff;
+}
+
+.navbar-links a.active::after {
+  width: 100%;
+}
+
+/* Logout dugme */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  transition: color 0.2s ease;
+  font-size: 1rem;
+}
+
+.logout-btn:hover {
+  color: #007bff;
+}

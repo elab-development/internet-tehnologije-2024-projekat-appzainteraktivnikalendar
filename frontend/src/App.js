@@ -10,7 +10,12 @@ import 'aos/dist/aos.css';
 import { useEffect } from 'react';
 import './components/Navbar.jsx';
 import Navbar from "./components/Navbar.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
+import PatientDashboard from "./pages/dashboard/PatientDashboard.jsx";
+import DoctorDashboard from "./pages/dashboard/DoctorDashboard.jsx";
+import AdminDashboard from "./pages/dashboard/AdminDashboard.jsx";
+import PatientCalendar from "./pages/patient/PatientCalendar.jsx";
+import PatientHistory from "./pages/patient/PatientHistory.jsx";
+
 
 function App() {
   useEffect(() => {
@@ -23,7 +28,11 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
+        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/patient/calendar" element={<PatientCalendar />} />
+        <Route path="/patient/history" element={<PatientHistory />} />
       </Routes>
     </Router>
   );

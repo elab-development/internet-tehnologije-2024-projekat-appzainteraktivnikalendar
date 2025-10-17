@@ -28,21 +28,25 @@ const Login = () => {
       const response = await api.post("/login", formData);
       localStorage.setItem("auth_token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/dashboard"); // ili neka početna stranica po ulozi
+      if (response.data.user.role === "patient") {
+        navigate("/patient/dashboard");
+      } else if (response.data.user.role === "doctor") {
+        navigate("/doctor/dashboard");
+      } else {
+        navigate("/admin/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Greška pri prijavi");
     }
   };
 
   return (
-    <Container
-      className="register-page d-flex justify-content-center align-items-center"
-    >
+    <Container className="register-page d-flex justify-content-center align-items-center">
       <Row className="w-100">
         <Col md={{ span: 6, offset: 3 }}>
           <Card className="p-4 shadow">
             <Card.Body>
-              <Card.Title className="text-center mb-4">Prijava</Card.Title>
+              <Card.Title className="text-center mb-4"><h2>Prijava</h2></Card.Title>
               {error && <Alert variant="danger">{error}</Alert>}
 
               <Form onSubmit={handleSubmit}>
