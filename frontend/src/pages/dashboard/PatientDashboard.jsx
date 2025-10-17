@@ -1,11 +1,15 @@
-// src/pages/DashboardPatient.jsx
-import React from "react";
+import React, { useState } from "react";
+import { Button, Container, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
-import { Button, Container } from "react-bootstrap";
 import "../../styles/Dashboard.css";
 
 const DashboardPatient = () => {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleExportICS = async () => {
+    setLoading(true);
     try {
       const response = await api.get("/patient/appointments/export", {
         responseType: "blob",
@@ -21,6 +25,8 @@ const DashboardPatient = () => {
     } catch (error) {
       console.error("Greška pri izvozu termina:", error);
       alert("Došlo je do greške prilikom izvoza termina.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,14 +34,27 @@ const DashboardPatient = () => {
     <Container className="dashboard-container">
       <h1 className="dashboard-title">Dobrodošli na vaš nalog</h1>
       <div className="dashboard-buttons">
-        <Button variant="primary" href="/patient/calendar">
+        <Button variant="primary" onClick={() => navigate("/calendar")}>
           📅 Kalendar
         </Button>
-        <Button variant="secondary" href="/patient/history">
+        <Button variant="secondary" onClick={() => navigate("/history")}>
           🩺 Istorija pregleda
         </Button>
-        <Button variant="success" onClick={handleExportICS}>
-          📤 Preuzmi .ICS fajl
+        <Button variant="success" onClick={handleExportICS} disabled={loading}>
+          {loading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />{" "}
+              Preuzimanje...
+            </>
+          ) : (
+            "📤 Preuzmi .ICS fajl"
+          )}
         </Button>
       </div>
     </Container>
