@@ -30,7 +30,7 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Registration successful. Please login to continue.',
+            'message' => 'Registracija uspešna. Molimo prijavite se da nastavite.',
             'user' => [
                 'id' => $user->id,
                 'first_name' => $user->first_name,

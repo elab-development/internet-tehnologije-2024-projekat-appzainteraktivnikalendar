@@ -4,12 +4,11 @@ import AppNavbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { FaStethoscope, FaHeartbeat, FaTooth } from "react-icons/fa";
-import "./HomePage.css";
+import "../styles/HomePage.css";
 
 const HomePage = () => {
   return (
     <>
-      <AppNavbar />
 
       {/* HERO SEKCIJA */}
       <div className="hero-section">
