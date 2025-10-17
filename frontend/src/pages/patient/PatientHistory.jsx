@@ -13,6 +13,7 @@ import {
   FaCalendarAlt,
   FaClock,
   FaClipboardList,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { format } from "date-fns";
 import { srLatn } from "date-fns/locale"; // Import Serbian locale for date-fns
@@ -135,15 +136,17 @@ const PatientHistory = () => {
 
                     <Card.Text className="text-muted">
                       {/* Date Information */}
-                      <p className="mb-1">
+                      <div className="mb-1">
+                        {" "}
                         <strong>
                           <FaCalendarAlt className="me-2 text-success" /> Datum:
                         </strong>{" "}
                         {format(new Date(app.start_time), "dd. MMMM yyyy.", {
                           locale: srLatn,
                         })}
-                      </p>
-                      <p className="mb-1">
+                      </div>
+                      <div className="mb-1">
+                        {" "}
                         <strong>
                           <FaClock className="me-2 text-info" /> Vreme:
                         </strong>{" "}
@@ -154,26 +157,25 @@ const PatientHistory = () => {
                         {format(new Date(app.end_time), "HH:mm", {
                           locale: srLatn,
                         })}
-                      </p>
+                      </div>
 
                       <hr className="my-3 text-light" />
 
                       {/* Note/Details */}
-                      <p className="mb-0">
+                      <div className="mb-0">
+                        {" "}
                         <strong>
                           <FaClipboardList className="me-2 text-warning" />{" "}
                           Napomena:
                         </strong>
-                      </p>
+                      </div>
                       <div className="border rounded p-2 mt-1 bg-light small">
                         {app.note || "Nema dodatnih napomena."}
                       </div>
                     </Card.Text>
                   </Card.Body>
-                  <Card.Footer className="bg-white border-top-0 pt-0 pb-3 d-flex justify-content-end">
-                    <span className="text-success fw-bold small">
-                      Pregled završen
-                    </span>
+                  <Card.Footer className="bg-white border-top-0 pt-0 pb-3 d-flex justify-content-end align-items-center text-success fw-bold small">
+                    <FaCheckCircle className="me-2" /> Pregled završen
                   </Card.Footer>
                 </Card>
               </Col>
