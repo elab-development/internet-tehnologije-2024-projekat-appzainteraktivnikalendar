@@ -34,10 +34,10 @@ const DashboardPatient = () => {
     <Container className="dashboard-container">
       <h1 className="dashboard-title">Dobrodošli na vaš nalog</h1>
       <div className="dashboard-buttons">
-        <Button variant="primary" onClick={() => navigate("/calendar")}>
+        <Button variant="primary" onClick={() => navigate("/patient/calendar")}>
           📅 Kalendar
         </Button>
-        <Button variant="secondary" onClick={() => navigate("/history")}>
+        <Button variant="secondary" onClick={() => navigate("/patient/history")}>
           🩺 Istorija pregleda
         </Button>
         <Button variant="success" onClick={handleExportICS} disabled={loading}>

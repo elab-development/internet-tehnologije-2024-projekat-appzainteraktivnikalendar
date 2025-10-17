@@ -451,7 +451,7 @@ class AppointmentController extends Controller
             ->where('patient_id', $user->id)
             ->where('status', 'completed')
             ->orderBy('start_time', 'desc')
-            ->paginate(10); // 10 redova po strani
+            ->paginate(6);
 
         // Ako nema rezultata, paginacija će vratiti praznu stranicu
         return PatientAppointmentResource::collection($appointments)
