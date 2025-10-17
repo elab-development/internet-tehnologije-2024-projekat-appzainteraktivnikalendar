@@ -134,7 +134,7 @@ const PatientHistory = () => {
 
                     <hr className="my-3 text-light" />
 
-                    <Card.Text className="text-muted">
+                    <div className="text-muted">
                       {/* Date Information */}
                       <div className="mb-1">
                         {" "}
@@ -172,7 +172,7 @@ const PatientHistory = () => {
                       <div className="border rounded p-2 mt-1 bg-light small">
                         {app.note || "Nema dodatnih napomena."}
                       </div>
-                    </Card.Text>
+                    </div>
                   </Card.Body>
                   <Card.Footer className="bg-white border-top-0 pt-0 pb-3 d-flex justify-content-end align-items-center text-success fw-bold small">
                     <FaCheckCircle className="me-2" /> Pregled završen

@@ -1,0 +1,110 @@
+/* === Calendar Page Layout === */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(180deg, #f8faff 0%, #eef2f7 100%);
+  overflow: hidden;
+}
+
+.calendar-title {
+  text-align: center;
+  font-weight: 700;
+  color: #007bff;
+  margin: 1rem 0;
+}
+
+/* === FullCalendar container === */
+.calendar-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 0 1rem 1rem;
+  overflow: hidden;
+}
+
+.fc {
+  width: 100%;
+  height: 100%;
+}
+
+.fc-view-harness {
+  height: 100% !important;
+}
+
+/* === FullCalendar styling === */
+.fc-toolbar-title {
+  font-weight: 600 !important;
+  color: #333 !important;
+}
+
+.fc-button-primary {
+  background-color: #007bff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  transition: background 0.2s;
+}
+
+.fc-button-primary:hover {
+  background-color: #0056b3 !important;
+}
+
+.fc-daygrid-day-frame {
+  height: 100%;
+}
+
+.fc-daygrid-day {
+  transition: background 0.2s;
+}
+
+.fc-daygrid-day:hover {
+  background-color: #f4f9ff;
+  cursor: pointer;
+}
+
+/* === Event appearance === */
+.fc-event {
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 2px 4px;
+  transition: transform 0.15s ease;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.fc-event:hover {
+  transform: scale(1.03);
+  z-index: 5;
+}
+
+/* === Modal === */
+.modern-modal .modal-content {
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+}
+
+.modern-modal .modal-header {
+  border-bottom: none;
+}
+
+.modern-modal .modal-footer {
+  border-top: none;
+}
+
+.modern-modal .modal-title {
+  color: #007bff;
+  font-weight: 600;
+}
