@@ -168,7 +168,7 @@ class AppointmentController extends Controller
             ->first();
 
         if (!$schedule) {
-            return response()->json(['message' => 'Doctor does not work on this day.'], 404);
+            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
         }
 
         // Dohvati zauzete termine tog doktora za taj dan
@@ -275,7 +275,7 @@ class AppointmentController extends Controller
     public function updateAppointment(Request $request, $appointmentId)
     {
         $request->validate([
-            'new_start_time' => 'required|date_format:Y-m-d H:i',
+            'new_start_time' => 'required',
         ]);
 
         $user = Auth::user();
