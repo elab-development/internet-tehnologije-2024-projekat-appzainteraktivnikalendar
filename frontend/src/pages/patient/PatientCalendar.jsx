@@ -14,6 +14,7 @@ const PatientCalendar = () => {
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -100,6 +101,7 @@ const PatientCalendar = () => {
     today.setHours(0, 0, 0, 0);
 
     if (clickedDate > today) {
+      setSelectedDate(info.dateStr);
       setShowCreateModal(true);
     } else {
       // umesto alert možeš prikazati toast ili neku poruku u UI
@@ -163,6 +165,21 @@ const PatientCalendar = () => {
       <AppointmentCreateModal
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
+        date={selectedDate}
+        onSuccess={(newAppointment) => {
+          // Dodaj novi appointment u state i osveži kalendar
+          setAppointments((prev) => [
+            ...prev,
+            {
+              id: newAppointment.id,
+              title: `Dr. ${newAppointment.doctor.first_name} ${newAppointment.doctor.last_name}`,
+              start: newAppointment.start_time,
+              end: newAppointment.end_time,
+              color: newAppointment.doctor.specialization?.color || "#007bff",
+              extendedProps: newAppointment,
+            },
+          ]);
+        }}
       />
       <AppointmentDetailsModal
         show={showDetailsModal}
