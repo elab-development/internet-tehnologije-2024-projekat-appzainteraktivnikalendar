@@ -8,9 +8,10 @@ import {
   Row,
   Col,
   Card,
+  Spinner,
 } from "react-bootstrap";
 import api from "../api/api";
-import "../styles/Register.css";
+import "../styles/Auth.css";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -24,20 +25,22 @@ function Register() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setMessage("");
+
     if (formData.password !== formData.password_confirmation) {
       setError("Lozinke se ne poklapaju.");
       return;
     }
 
+    setSubmitting(true);
     try {
       const response = await api.post("/register", formData);
       setMessage(response.data.message);
@@ -57,16 +60,18 @@ function Register() {
       } else {
         setError(err.response?.data?.message || "Greška u registraciji.");
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <Container className="register-page d-flex justify-content-center align-items-center">
+    <Container className="auth-page d-flex justify-content-center align-items-center">
       <Row className="w-100">
         <Col md={{ span: 6, offset: 3 }}>
-          <Card className="p-4 shadow-lg">
+          <Card className="p-4 shadow-lg auth-card">
             <Card.Body>
-              <h2 className="text-center mb-4">Registracija</h2>
+              <h2 className="text-center mb-4 auth-title">Registracija</h2>
 
               {error && <Alert variant="danger">{error}</Alert>}
               {message && <Alert variant="success">{message}</Alert>}
@@ -150,9 +155,24 @@ function Register() {
                   </Col>
                 </Row>
 
-                <div className="text-center">
-                  <Button type="submit" className="w-100 mt-2 register-btn">
-                    Registruj se
+                <div className="d-grid">
+                  <Button
+                    type="submit"
+                    className="register-btn"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="me-2"
+                        />
+                        Registracija...
+                      </>
+                    ) : (
+                      "Registruj se"
+                    )}
                   </Button>
                 </div>
               </Form>

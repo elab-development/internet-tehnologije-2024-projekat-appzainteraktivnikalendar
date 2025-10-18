@@ -1,0 +1,22 @@
+/* src/styles/Footer.css */
+.footer {
+  background-color: #007bff;
+  color: white;
+  padding: 20px 0;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.footer h5 {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer svg {
+  vertical-align: middle;
+  color: #ffdd57;
+}

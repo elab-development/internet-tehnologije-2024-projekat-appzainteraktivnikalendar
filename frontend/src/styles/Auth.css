@@ -1,0 +1,59 @@
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(to right, #e6f2ff, #f7fbff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 60px;
+}
+
+.auth-card {
+  border-radius: 15px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  animation: fadeScale 0.3s ease-out;
+}
+
+.auth-title {
+  color: #007bff;
+  font-weight: 600;
+}
+
+.register-btn,
+.btn-primary {
+  background-color: #007bff !important;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+
+.register-btn:hover,
+.btn-primary:hover {
+  background-color: #0056b3 !important;
+  transform: translateY(-2px);
+}
+
+.form-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+@keyframes fadeScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
