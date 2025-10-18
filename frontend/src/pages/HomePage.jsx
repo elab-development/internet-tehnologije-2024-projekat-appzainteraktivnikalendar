@@ -1,6 +1,5 @@
 // src/pages/HomePage.jsx
 import React from "react";
-import AppNavbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { FaStethoscope, FaHeartbeat, FaTooth } from "react-icons/fa";
