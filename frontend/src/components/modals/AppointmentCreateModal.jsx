@@ -31,7 +31,6 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
     try {
       // Pretpostavljamo da je dateString u formatu "YYYY-MM-DD"
       const [year, month, day] = dateString.split("-");
-      console.log(dateString);
 
       // Kreiranje Date objekta (koristeći UTC da se izbegne lokalni offset
       // pri konverziji iz stringa bez vremena, ali ovde nam treba samo formatiranje)
@@ -295,7 +294,7 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
               Zakazivanje...
             </>
           ) : (
-            "Zakazi termin"
+            "Zakaži termin"
           )}
         </Button>
       </Modal.Footer>
