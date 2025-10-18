@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Spinner, Alert } from "react-bootstrap";
-import { FaUserMd, FaStethoscope, FaClock } from "react-icons/fa";
+import {
+  FaUserMd,
+  FaStethoscope,
+  FaClock,
+  FaCalendarAlt,
+} from "react-icons/fa"; // Dodao FaCalendarAlt
 import api from "../../api/api";
 
 const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
@@ -20,6 +25,30 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Funkcija za formatiranje datuma YYYY-MM-DD u format za prikaz
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "Nije izabran datum";
+    try {
+      // Pretpostavljamo da je dateString u formatu "YYYY-MM-DD"
+      const [year, month, day] = dateString.split("-");
+      console.log(dateString);
+
+      // Kreiranje Date objekta (koristeći UTC da se izbegne lokalni offset
+      // pri konverziji iz stringa bez vremena, ali ovde nam treba samo formatiranje)
+      const d = new Date(dateString);
+      // Najbolje je koristiti toLocaleDateString za ispravan regionalni format
+      return d.toLocaleDateString("sr-RS", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (e) {
+      console.error("Greška pri formatiranju datuma:", e);
+      return dateString; // Vrati neformatirani string ako dođe do greške
+    }
+  };
+
+  // 1. Kada se modal otvori/zatvori ili promeni datum
   useEffect(() => {
     if (!show) return;
 
@@ -39,12 +68,13 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
         const res = await api.get("/patient/available-specializations", {
           params: { date },
         });
-        setSpecializations(res.data);
+        setSpecializations(res.data || []);
       } catch (err) {
         setError(
           err.response?.data?.message ||
             "Greška pri učitavanju specijalizacija."
         );
+        setSpecializations([]);
       } finally {
         setLoadingSpecs(false);
       }
@@ -53,9 +83,10 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
     fetchSpecializations();
   }, [show, date]);
 
-  // Kada se izabere specijalizacija → učitaj doktore
+  // 2. Kada se izabere specijalizacija → učitaj doktore
   useEffect(() => {
-    if (!selectedSpecialization) return;
+    if (!show || !selectedSpecialization) return;
+
     setDoctors([]);
     setSelectedDoctor("");
     setTimes([]);
@@ -67,22 +98,24 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
         const res = await api.get("/patient/available-doctors", {
           params: { date, specialization_id: selectedSpecialization },
         });
-        setDoctors(res.data);
+        setDoctors(res.data || []);
       } catch (err) {
         setError(
           err.response?.data?.message || "Greška pri učitavanju doktora."
         );
+        setDoctors([]);
       } finally {
         setLoadingDoctors(false);
       }
     };
 
     fetchDoctors();
-  }, [selectedSpecialization, date]);
+  }, [selectedSpecialization, date, show]);
 
-  // Kada se izabere doktor → učitaj dostupna vremena
+  // 3. Kada se izabere doktor → učitaj dostupna vremena
   useEffect(() => {
-    if (!selectedDoctor) return;
+    if (!show || !selectedDoctor) return;
+
     setTimes([]);
     setSelectedTime("");
 
@@ -100,13 +133,14 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
         setError(
           err.response?.data?.message || "Greška pri učitavanju vremena."
         );
+        setTimes([]);
       } finally {
         setLoadingTimes(false);
       }
     };
 
     fetchTimes();
-  }, [selectedDoctor, date]);
+  }, [selectedDoctor, date, show]);
 
   const handleSubmit = async () => {
     if (!selectedSpecialization || !selectedDoctor || !selectedTime) {
@@ -124,6 +158,14 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
       });
       setSuccessMessage("Termin uspešno zakazan!");
       onSuccess && onSuccess(res.data.appointment);
+
+      // KLJUČNO RESETOVANJE STANJA NAKON USPEHA
+      setSelectedSpecialization("");
+      setSelectedDoctor("");
+      setSelectedTime("");
+      setDoctors([]);
+      setTimes([]);
+
       // Zatvori modal posle 1.5s
       setTimeout(() => {
         onHide();
@@ -139,12 +181,27 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
 
   return (
     <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton className="border-0">
+      <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title style={{ fontWeight: 600 }}>
           Zakazivanje pregleda
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="px-4 pb-3">
+
+      {/* PRIKAZ IZABRANOG DATUMA */}
+      <div className="px-4 pt-0 pb-2">
+        <p className="text-muted mb-0 d-flex align-items-center">
+          <FaCalendarAlt
+            className="me-2 text-secondary"
+            style={{ fontSize: "1.1em" }}
+          />
+          <strong style={{ fontWeight: 500 }}>
+            Za datum: {formatDateForDisplay(date)}
+          </strong>
+        </p>
+      </div>
+      {/* KRAJ PRIKAZA DATUMA */}
+
+      <Modal.Body className="px-4 pb-3 pt-0">
         {error && <Alert variant="danger">{error}</Alert>}
         {successMessage && <Alert variant="success">{successMessage}</Alert>}
 
@@ -183,7 +240,11 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
             <Form.Select
               value={selectedDoctor}
               onChange={(e) => setSelectedDoctor(e.target.value)}
-              disabled={!doctors.length}
+              disabled={
+                !selectedSpecialization ||
+                loadingDoctors ||
+                doctors.length === 0
+              }
             >
               <option value="">Izaberite doktora</option>
               {doctors.map((d) => (
@@ -207,7 +268,7 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
             <Form.Select
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              disabled={!times.length}
+              disabled={!selectedDoctor || loadingTimes || times.length === 0}
             >
               <option value="">Izaberite vreme</option>
               {times.map((t) => (
@@ -223,7 +284,11 @@ const AppointmentCreateModal = ({ show, onHide, date, onSuccess }) => {
         <Button variant="secondary" onClick={onHide} disabled={submitting}>
           Zatvori
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={submitting || !selectedTime}
+        >
           {submitting ? (
             <>
               <Spinner animation="border" size="sm" className="me-2" />

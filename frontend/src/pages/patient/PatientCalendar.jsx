@@ -127,7 +127,7 @@ const PatientCalendar = () => {
         />
       )}
 
-      {/* === Praznici (ostaje isto) === */}
+      {/* === Praznici === */}
       <Modal
         show={showHolidayModal}
         onHide={() => setShowHolidayModal(false)}
