@@ -587,11 +587,12 @@ class AppointmentController extends Controller
                 // Pretraga po celom imenu ili delu imena/prezimena
                 $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                     ->orWhere('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $appointments = $query->orderByDesc('start_time')->paginate(10);
+        $appointments = $query->orderByDesc('start_time')->paginate(8);
 
         return DoctorAppointmentResource::collection($appointments);
     }

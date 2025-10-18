@@ -31,7 +31,7 @@ const Navbar = () => {
   const goHome = () => {
     if (user) {
       if (user.role === "patient") navigate("/patient/dashboard");
-      else navigate("/dashboard");
+      else if(user.role === "doctor") navigate("/doctor/dashboard");
     } else {
       navigate("/");
     }
@@ -75,6 +75,35 @@ const Navbar = () => {
             </li>
             <li>
               <NavLink to="/patient/history">Istorija</NavLink>
+            </li>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="logout-btn d-flex align-items-center justify-content-center"
+                disabled={loggingOut}
+              >
+                {loggingOut && (
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                )}
+                {loggingOut ? "Odjavljivanje..." : "Logout"}
+              </button>
+            </li>
+          </>
+        )}
+        {user && user.role === "doctor" && (
+          <>
+            <li>
+              <NavLink to="/doctor/dashboard">Dashboard</NavLink>
+            </li>
+            <li>
+              <NavLink to="/doctor/appointments">Zakazani termini</NavLink>
+            </li>
+            <li>
+              <NavLink to="/doctor/history">Istorija pregleda</NavLink>
             </li>
             <li>
               <button

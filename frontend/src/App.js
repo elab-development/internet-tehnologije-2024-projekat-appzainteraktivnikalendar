@@ -15,6 +15,7 @@ import DoctorDashboard from "./pages/dashboard/DoctorDashboard.jsx";
 import AdminDashboard from "./pages/dashboard/AdminDashboard.jsx";
 import PatientCalendar from "./pages/patient/PatientCalendar.jsx";
 import PatientHistory from "./pages/patient/PatientHistory.jsx";
+import DoctorHistory from "./pages/doctor/DoctorHistory.jsx";
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/patient/calendar" element={<PatientCalendar />} />
         <Route path="/patient/history" element={<PatientHistory />} />
+        <Route path="/doctor/history" element={<DoctorHistory />} />
       </Routes>
     </Router>
   );
