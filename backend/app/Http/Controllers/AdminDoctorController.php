@@ -39,8 +39,7 @@ class AdminDoctorController extends Controller
 
         $doctors = $query->orderBy('last_name', 'asc')
             ->orderBy('first_name', 'asc')
-            ->paginate(10)
-            ->appends($request->query()); // da se query parametri zadrže pri paginaciji
+            ->paginate(10);
 
         return DoctorSimpleResource::collection($doctors);
     }
@@ -65,18 +64,9 @@ class AdminDoctorController extends Controller
             'password' => 'required|string|min:8',
             'phone' => 'nullable|string|max:20',
             'specialty_id' => 'nullable|exists:specializations,id',
-            'new_specialty_name' => 'nullable|string|max:255',
         ]);
+        $specialtyId = $request->specialty_id;
 
-        // Ako admin šalje novu specijalnost
-        if ($request->filled('new_specialty_name')) {
-            $specialty = Specialization::create([
-                'name' => $request->new_specialty_name,
-            ]);
-            $specialtyId = $specialty->id;
-        } else {
-            $specialtyId = $request->specialty_id;
-        }
 
         $doctor = User::create([
             'first_name' => $request->first_name,
@@ -89,7 +79,7 @@ class AdminDoctorController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Doctor created successfully',
+            'message' => 'Doktor uspešno dodat.',
             'doctor' => new DoctorSimpleResource($doctor)
         ], 201);
     }
@@ -124,20 +114,6 @@ class AdminDoctorController extends Controller
      */
     public function destroy(string $id)
     {
-        $doctor = User::where('role', 'doctor')->findOrFail($id);
-
-        $hasAppointments = $doctor->appointmentsAsDoctor()->whereIn('status', ['scheduled', 'completed'])->exists();
-        if ($hasAppointments) {
-            return response()->json([
-                'message' => 'Cannot delete doctor with scheduled or completed appointments.'
-            ], 400);
-        }
-        $deletedDoctor = new DoctorSimpleResource($doctor);
-        $doctor->delete();
-
-        return response()->json([
-            'message' => 'Doctor deleted successfully.',
-            'doctor' => $deletedDoctor
-        ]);
+        //
     }
 }

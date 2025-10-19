@@ -81,6 +81,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         // RESURSI
         Route::get('/specializations', [SpecializationController::class, 'getSpecializations']);
-        Route::resource('doctors', AdminDoctorController::class)->only(['index', 'show', 'store', 'destroy']);
+        Route::resource('doctors', AdminDoctorController::class)->only(['index', 'show', 'store']);
     });
 });

@@ -49,3 +49,15 @@
 .pagination-wrapper button {
   min-width: 80px;
 }
+
+.table-modern .btn-info {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+.table-modern .btn-info:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+  color: white;
+}

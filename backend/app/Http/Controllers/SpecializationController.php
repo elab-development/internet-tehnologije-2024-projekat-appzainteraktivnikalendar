@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 class SpecializationController extends Controller
 {
     public function getSpecializations()
-{
-    $specializations = Specialization::select('id', 'name')->get();
+    {
+        $specializations = Specialization::select('id', 'name')->get();
 
-    return response()->json([
-        'specializations' => $specializations
-    ]);
-}
+        return response()->json([
+            'specializations' => $specializations
+        ]);
+    }
 }
