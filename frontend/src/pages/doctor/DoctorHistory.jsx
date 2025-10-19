@@ -134,7 +134,7 @@ const renderPagination = () => {
 
       {loading ? (
         <div className="text-center py-5">
-          <Spinner animation="border" />
+          <Spinner animation="border" variant="primary"/>
         </div>
       ) : (
         <Table striped bordered hover responsive className="table-modern">

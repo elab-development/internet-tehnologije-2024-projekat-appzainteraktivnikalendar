@@ -21,7 +21,7 @@ const AppointmentEditModal = ({ show, onHide, appointment, onSuccess }) => {
     setError("");
     setSuccessMessage("");
 
-    const date = appointment.start_time.split(" ")[0];
+    const date = appointment.start_time.split("T")[0];
 
     const fetchTimes = async () => {
       setLoadingTimes(true);
@@ -67,11 +67,10 @@ const AppointmentEditModal = ({ show, onHide, appointment, onSuccess }) => {
 
       setTimeout(() => {
         onHide();
+        setSubmitting(false);
       }, 1500);
     } catch (err) {
       setError(err.response?.data?.message || "Greška pri izmeni termina.");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -92,13 +91,12 @@ const AppointmentEditModal = ({ show, onHide, appointment, onSuccess }) => {
 
       setTimeout(() => {
         onHide();
+        setCanceling(false);
       }, 1500);
     } catch (err) {
       setError(
         err.response?.data?.message || "Greška pri otkazivanju termina."
       );
-    } finally {
-      setCanceling(false);
     }
   };
 

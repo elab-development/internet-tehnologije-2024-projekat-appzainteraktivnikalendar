@@ -1,6 +1,15 @@
 // src/pages/DoctorAppointments.jsx
 import React, { useState, useEffect } from "react";
-import { Table, Button, Spinner, Alert, Modal, Form } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Spinner,
+  Alert,
+  Modal,
+  Form,
+  Toast,
+  ToastContainer,
+} from "react-bootstrap";
 import api from "../../api/api";
 import "../../styles/DoctorAppointments.css";
 import SearchBar from "../../components/Searchbar";
@@ -17,6 +26,18 @@ const DoctorAppointments = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState("");
+
+  // Reject state
+  const [rejectingId, setRejectingId] = useState(null);
+
+  // Toast state
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    variant: "success",
+  });
 
   const fetchAppointments = async (pageNum = 1, searchTerm = "") => {
     setLoading(true);
@@ -50,27 +71,54 @@ const DoctorAppointments = () => {
   const handleReject = async (id) => {
     if (!window.confirm("Da li ste sigurni da želite odbiti ovaj termin?"))
       return;
+
+    setRejectingId(id);
     try {
       await api.post(`/doctor/appointments/${id}/reject`);
       fetchAppointments(page, search);
+      setToast({
+        show: true,
+        message: "Termin uspešno odbijen.",
+        variant: "success",
+      });
     } catch (err) {
-      alert(err.response?.data?.message || "Greška pri odbijanju termina.");
+      setToast({
+        show: true,
+        message: err.response?.data?.message || "Greška pri odbijanju termina.",
+        variant: "danger",
+      });
+    } finally {
+      setRejectingId(null);
     }
   };
 
   const handleCompleteOpen = (id) => {
     setSelectedId(id);
     setNote("");
+    setModalError("");
     setShowModal(true);
   };
 
   const handleCompleteSubmit = async () => {
+    if (!selectedId) return;
+    setSubmitting(true);
+    setModalError("");
     try {
       await api.post(`/doctor/appointments/${selectedId}/complete`, { note });
       setShowModal(false);
+      setNote("");
       fetchAppointments(page, search);
+      setToast({
+        show: true,
+        message: "Napomena uspešno sačuvana.",
+        variant: "success",
+      });
     } catch (err) {
-      alert(err.response?.data?.message || "Greška pri završavanju termina.");
+      setModalError(
+        err.response?.data?.message || "Greška pri završavanju termina."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -107,7 +155,7 @@ const DoctorAppointments = () => {
           {loading ? (
             <tr>
               <td colSpan="6" className="text-center py-4">
-                <Spinner animation="border" />
+                <Spinner animation="border" variant="primary" />
               </td>
             </tr>
           ) : appointments.length === 0 ? (
@@ -145,8 +193,23 @@ const DoctorAppointments = () => {
                       size="sm"
                       variant="danger"
                       onClick={() => handleReject(app.id)}
+                      disabled={rejectingId === app.id}
                     >
-                      Odbij termin
+                      {rejectingId === app.id ? (
+                        <>
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className="me-2"
+                          />
+                          Odbijanje...
+                        </>
+                      ) : (
+                        "Odbij termin"
+                      )}
                     </Button>
                   ) : (
                     <span>-</span>
@@ -194,11 +257,24 @@ const DoctorAppointments = () => {
       </div>
 
       {/* Modal for note */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal
+        show={showModal}
+        onHide={() => !submitting && setShowModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Dodaj napomenu</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {modalError && (
+            <Alert
+              variant="danger"
+              onClose={() => setModalError("")}
+              dismissible
+            >
+              {modalError}
+            </Alert>
+          )}
           <Form.Group controlId="note">
             <Form.Label>Napomena</Form.Label>
             <Form.Control
@@ -207,18 +283,54 @@ const DoctorAppointments = () => {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Unesite napomenu o pregledu..."
+              disabled={submitting}
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModal(false)}
+            disabled={submitting}
+          >
             Otkaži
           </Button>
-          <Button variant="success" onClick={handleCompleteSubmit}>
-            Sačuvaj
+          <Button
+            variant="success"
+            onClick={handleCompleteSubmit}
+            disabled={submitting || !note.trim()}
+          >
+            {submitting ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Čuvanje...
+              </>
+            ) : (
+              "Sačuvaj"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Toast Notification */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          onClose={() => setToast({ ...toast, show: false })}
+          show={toast.show}
+          delay={3000}
+          autohide
+          bg={toast.variant}
+        >
+          <Toast.Body className="text-white">{toast.message}</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };
