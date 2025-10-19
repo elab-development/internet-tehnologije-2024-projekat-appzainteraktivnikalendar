@@ -6,8 +6,11 @@ use App\Http\Resources\DoctorResource;
 use App\Http\Resources\DoctorSimpleResource;
 use App\Models\Specialization;
 use App\Models\User;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Log;
 
 class AdminDoctorController extends Controller
 {
@@ -57,31 +60,75 @@ class AdminDoctorController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. Definišemo pravila validacije
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
         $request->validate([
+            // Osnovni podaci za User model
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:20',
-            'specialty_id' => 'nullable|exists:specializations,id',
-        ]);
-        $specialtyId = $request->specialty_id;
+            'phone' => 'string|max:20',
+            'specialty_id' => 'exists:specializations,id',
 
-
-        $doctor = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'role' => 'doctor',
-            'specialty_id' => $specialtyId,
+            // Validacija za doctor_schedules
+            'schedules' => 'nullable|array',
+            'schedules.*.day_of_week' => [
+                'required',
+                'string',
+                Rule::in($days), // Proverava da li je dan validan
+            ],
+            'schedules.*.start_time' => 'required|date_format:H:i',
+            'schedules.*.end_time' => 'required|date_format:H:i|after:schedules.*.start_time',
         ]);
 
-        return response()->json([
-            'message' => 'Doktor uspešno dodat.',
-            'doctor' => new DoctorSimpleResource($doctor)
-        ], 201);
+        // Koristimo transakciju baze podataka
+        try {
+            DB::beginTransaction();
+
+            // 2. Kreiranje User (Doctor) modela
+            $doctor = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone' => $request->phone,
+                'role' => 'doctor',
+                'specialty_id' => $request->specialty_id,
+            ]);
+
+            // 3. Dodavanje Doctor Schedules (Radnog Vremena)
+            if (!empty($request->schedules)) {
+                $schedulesToInsert = [];
+                foreach ($request->schedules as $schedule) {
+                    $schedulesToInsert[] = [
+                        'doctor_id' => $doctor->id,
+                        'day_of_week' => $schedule['day_of_week'],
+                        'start_time' => $schedule['start_time'],
+                        'end_time' => $schedule['end_time'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                $doctor->doctorSchedules()->insert($schedulesToInsert);
+            }
+
+            DB::commit();
+
+            // 4. Vraćanje odgovora
+            return response()->json([
+                'message' => 'Doktor i radno vreme uspešno dodati.',
+                'doctor' => new DoctorSimpleResource($doctor->load('specialization'))
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error("Greška pri kreiranju doktora: " . $e->getMessage());
+            return response()->json(['message' => 'Došlo je do greške pri čuvanju podataka.'], 500);
+        }
     }
 
     /**
