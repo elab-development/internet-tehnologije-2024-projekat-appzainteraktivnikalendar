@@ -12,7 +12,7 @@ const DoctorHistory = () => {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
-  const fetchAppointments = async (pageNumber = 1, searchTerm = "") => {
+  const doFetchAppointments = async (pageNumber, searchTerm) => {
     setLoading(true);
     try {
       const res = await api.get("/doctor/history", {
@@ -29,97 +29,90 @@ const DoctorHistory = () => {
   };
 
   useEffect(() => {
-    fetchAppointments(page, search);
-  }, []);
+    doFetchAppointments(page, search);
+  }, [page, search]);
 
   const handleSearchChange = (value) => {
     setSearch(value);
-    fetchAppointments(1, value);
+    setPage(1);
   };
 
   const handleClearSearch = () => {
     setSearch("");
-    fetchAppointments(1, "");
+    setPage(1);
   };
 
-const renderPagination = () => {
-  if (lastPage <= 1) return null;
+  const changePage = (pageNumber) => {
+    setPage(pageNumber);
+  };
 
-  const items = [];
+  const renderPagination = () => {
+    if (lastPage <= 1) return null;
 
-  // Prva stranica
-  items.push(
-    <Pagination.First
-      key="first"
-      onClick={() => {
-        setPage(1);
-        fetchAppointments(1, search);
-      }}
-      disabled={page === 1}
-    />
-  );
+    const items = [];
 
-  // Prethodna stranica
-  items.push(
-    <Pagination.Prev
-      key="prev"
-      onClick={() => {
-        if (page > 1) {
-          setPage(page - 1);
-          fetchAppointments(page - 1, search);
-        }
-      }}
-      disabled={page === 1}
-    />
-  );
-
-  // Numeričke stranice (prikaz 5 stranica u blizini trenutne)
-  const startPage = Math.max(1, page - 2);
-  const endPage = Math.min(lastPage, page + 2);
-
-  for (let number = startPage; number <= endPage; number++) {
+    // Prva stranica
     items.push(
-      <Pagination.Item
-        key={number}
-        active={number === page}
-        onClick={() => {
-          setPage(number);
-          fetchAppointments(number, search);
-        }}
-      >
-        {number}
-      </Pagination.Item>
+      <Pagination.First
+        key="first"
+        onClick={() => changePage(1)}
+        disabled={page === 1}
+      />
     );
-  }
 
-  // Sledeća stranica
-  items.push(
-    <Pagination.Next
-      key="next"
-      onClick={() => {
-        if (page < lastPage) {
-          setPage(page + 1);
-          fetchAppointments(page + 1, search);
-        }
-      }}
-      disabled={page === lastPage}
-    />
-  );
+    // Prethodna stranica
+    items.push(
+      <Pagination.Prev
+        key="prev"
+        onClick={() => {
+          if (page > 1) {
+            changePage(page - 1);
+          }
+        }}
+        disabled={page === 1}
+      />
+    );
 
-  // Poslednja stranica
-  items.push(
-    <Pagination.Last
-      key="last"
-      onClick={() => {
-        setPage(lastPage);
-        fetchAppointments(lastPage, search);
-      }}
-      disabled={page === lastPage}
-    />
-  );
+    // Numeričke stranice (prikaz 5 stranica u blizini trenutne)
+    const startPage = Math.max(1, page - 2);
+    const endPage = Math.min(lastPage, page + 2);
 
-  return <Pagination>{items}</Pagination>;
-};
+    for (let number = startPage; number <= endPage; number++) {
+      items.push(
+        <Pagination.Item
+          key={number}
+          active={number === page}
+          onClick={() => changePage(number)}
+        >
+          {number}
+        </Pagination.Item>
+      );
+    }
+
+    // Sledeća stranica
+    items.push(
+      <Pagination.Next
+        key="next"
+        onClick={() => {
+          if (page < lastPage) {
+            changePage(page + 1);
+          }
+        }}
+        disabled={page === lastPage}
+      />
+    );
+
+    // Poslednja stranica
+    items.push(
+      <Pagination.Last
+        key="last"
+        onClick={() => changePage(lastPage)}
+        disabled={page === lastPage}
+      />
+    );
+
+    return <Pagination>{items}</Pagination>;
+  };
 
   return (
     <Container className="my-5">
@@ -134,7 +127,7 @@ const renderPagination = () => {
 
       {loading ? (
         <div className="text-center py-5">
-          <Spinner animation="border" variant="primary"/>
+          <Spinner animation="border" variant="primary" />
         </div>
       ) : (
         <Table striped bordered hover responsive className="table-modern">
