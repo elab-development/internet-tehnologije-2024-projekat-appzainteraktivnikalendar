@@ -72,7 +72,7 @@ class AppointmentController extends Controller
         $date = $request->query('date');
 
         if (!$date) {
-            return response()->json(['message' => 'Date is required.'], 400);
+            return response()->json(['message' => 'Datum je obavezan.'], 400);
         }
 
         // Odredjujemo dan u nedelji (monday, tuesday...)
@@ -84,7 +84,7 @@ class AppointmentController extends Controller
             ->unique();
 
         if ($doctorIds->isEmpty()) {
-            return response()->json(['message' => 'No doctors available that day.'], 200);
+            return response()->json(['message' => 'Nema dostupnih doktora tog dana.'], 200);
         }
 
         // Uzimamo sve specijalizacije koje ti doktori imaju
@@ -97,7 +97,7 @@ class AppointmentController extends Controller
             ->get(['id', 'name']);
 
         if ($specializations->isEmpty()) {
-            return response()->json(['message' => 'No specializations available that day.'], 200);
+            return response()->json(['message' => 'Nema dostupnih specijalizacija tog dana.'], 200);
         }
 
         return response()->json($specializations);
@@ -115,7 +115,7 @@ class AppointmentController extends Controller
         $specializationId = $request->query('specialization_id');
 
         if (!$date || !$specializationId) {
-            return response()->json(['message' => 'Date and specialization_id are required.'], 400);
+            return response()->json(['message' => 'Datum i ID specijalizacije su obavezni.'], 400);
         }
 
         $dayOfWeek = strtolower(Carbon::parse($date)->format('l'));
@@ -132,7 +132,7 @@ class AppointmentController extends Controller
             ->get(['id', 'first_name', 'last_name']);
 
         if ($availableDoctors->isEmpty()) {
-            return response()->json(['message' => 'No doctors available for this specialization on this date.'], 200);
+            return response()->json(['message' => 'Nema dostupnih doktora za ovu specijalizaciju na izabrani datum.'], 200);
         }
 
         return response()->json($availableDoctors);
@@ -150,13 +150,13 @@ class AppointmentController extends Controller
         $date = $request->query('date');
 
         if (!$date) {
-            return response()->json(['message' => 'Date is required.'], 400);
+            return response()->json(['message' => 'Datum je obavezan.'], 400);
         }
 
         // datum mora biti u budućnosti
         $requestedDate = Carbon::parse($date);
         if ($requestedDate->isPast()) {
-            return response()->json(['message' => 'Date must be in the future.'], 400);
+            return response()->json(['message' => 'Datum mora biti u budućnosti.'], 400);
         }
 
         // Odredi koji je dan u nedelji (npr. Monday)
@@ -168,7 +168,7 @@ class AppointmentController extends Controller
             ->first();
 
         if (!$schedule) {
-            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
+            return response()->json(['message' => 'Doktor ne radi na ovaj dan.'], 400);
         }
 
         // Dohvati zauzete termine tog doktora za taj dan
@@ -218,7 +218,7 @@ class AppointmentController extends Controller
 
         // 1. Proveri da li je datum u budućnosti
         if ($startTime->isPast()) {
-            return response()->json(['message' => 'Cannot book an appointment in the past.'], 400);
+            return response()->json(['message' => 'Nije moguće zakazati termin u prošlosti.'], 400);
         }
 
         // 2. Proveri da li doktor radi taj dan i u to vreme
@@ -228,7 +228,7 @@ class AppointmentController extends Controller
             ->first();
 
         if (!$schedule) {
-            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
+            return response()->json(['message' => 'Doktor ne radi na ovaj dan.'], 400);
         }
 
         $appointmentStartTime = $startTime->format('H:i');
@@ -237,7 +237,7 @@ class AppointmentController extends Controller
         $endOfWork = $schedule->end_time->format('H:i');
 
         if ($appointmentStartTime < $startOfWork || $appointmentEndTime > $endOfWork) {
-            return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
+            return response()->json(['message' => 'Izabrano vreme je van radnog vremena doktora.'], 400);
         }
 
         // 3. Proveri da li termin već nije zakazan ili odbijen (double-check)
@@ -247,7 +247,7 @@ class AppointmentController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'Selected time is no longer available.'], 400);
+            return response()->json(['message' => 'Izabrano vreme više nije dostupno.'], 400);
         }
 
         // 4. Kreiraj termin
@@ -260,7 +260,7 @@ class AppointmentController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Appointment booked successfully.',
+            'message' => 'Termin uspešno zakazan.',
             'appointment' => new PatientAppointmentResource($appointment),
         ], 201);
     }
@@ -288,22 +288,22 @@ class AppointmentController extends Controller
 
         // 1. Ne može menjati prošle termine
         if ($appointment->start_time->isPast()) {
-            return response()->json(['message' => 'Cannot modify a past appointment.'], 400);
+            return response()->json(['message' => 'Nije moguće menjati prošle termine.'], 400);
         }
 
         // 2. Ako je vreme isto kao pre — nema promene
         if ($newStart->equalTo($appointment->start_time)) {
-            return response()->json(['message' => 'No changes detected.'], 400);
+            return response()->json(['message' => 'Termin je ostao nepromenjen.'], 400);
         }
 
         // 3. Samo zakazani termini mogu da se menjaju
         if ($appointment->status !== 'scheduled') {
-            return response()->json(['message' => 'Only scheduled appointments can be modified.'], 400);
+            return response()->json(['message' => 'Samo se zakazani termini mogu modifikovati.'], 400);
         }
 
         // 4. Termin mora biti u budućnosti
         if ($newStart->isPast()) {
-            return response()->json(['message' => 'Cannot move appointment to the past.'], 400);
+            return response()->json(['message' => 'Termin mora biti u budućnosti.'], 400);
         }
 
         // 5. Provera radnog vremena doktora
@@ -313,7 +313,7 @@ class AppointmentController extends Controller
             ->first();
 
         if (!$schedule) {
-            return response()->json(['message' => 'Doctor does not work on this day.'], 400);
+            return response()->json(['message' => 'Doktor ne radi izabranog dana.'], 400);
         }
 
         $appointmentStartTime = $newStart->format('H:i');
@@ -322,7 +322,7 @@ class AppointmentController extends Controller
         $endOfWork = $schedule->end_time->format('H:i');
 
         if ($appointmentStartTime < $startOfWork || $appointmentEndTimeStr > $endOfWork) {
-            return response()->json(['message' => 'Selected time is outside of doctor\'s working hours.'], 400);
+            return response()->json(['message' => 'Izabrano vreme je van radnog vremena doktora.'], 400);
         }
 
         // 6. Proveri da li je termin već zauzet (isključujući trenutni termin)
@@ -333,7 +333,7 @@ class AppointmentController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'Selected time is no longer available.'], 400);
+            return response()->json(['message' => 'Izabrano vreme više nije dostupno, izaberite neko drugo.'], 400);
         }
 
         // 7. Ažuriraj termin
@@ -365,17 +365,17 @@ class AppointmentController extends Controller
 
         // 2. Proveri da li je termin već prošao
         if ($startTime->isPast()) {
-            return response()->json(['message' => 'Cannot cancel a past appointment.'], 400);
+            return response()->json(['message' => 'Nije moguće otkazati prošli termin.'], 400);
         }
 
         // 3. Proveri status termina
         if ($appointment->status !== 'scheduled') {
-            return response()->json(['message' => 'Only scheduled appointments can be cancelled.'], 400);
+            return response()->json(['message' => 'Samo zakazani termini mogu biti otkazani.'], 400);
         }
 
         // 4. Ne može se otkazati ako je manje od 1h do termina
         if (now()->diffInMinutes($startTime) < 60) {
-            return response()->json(['message' => 'Cannot cancel less than 1 hour before the appointment.'], 400);
+            return response()->json(['message' => 'Nije moguće otkazati termin manje od 1 sat pre početka.'], 400);
         }
 
         // 5. Ažuriraj status termina
@@ -385,7 +385,7 @@ class AppointmentController extends Controller
 
         // 6. Vrati JSON odgovor kroz resource
         return response()->json([
-            'message' => 'Appointment cancelled successfully.',
+            'message' => 'Termin uspešno otkazan.',
             'appointment' => new PatientAppointmentResource($appointment),
         ], 200);
     }
@@ -407,7 +407,7 @@ class AppointmentController extends Controller
             ->get();
 
         if ($appointments->isEmpty()) {
-            return response()->json(['message' => 'No appointments to export.'], 404);
+            return response()->json(['message' => 'Nema termina za izvoz.'], 404);
         }
 
         // Generišemo .ics sadržaj
@@ -416,8 +416,8 @@ class AppointmentController extends Controller
         foreach ($appointments as $appointment) {
             $start = $appointment->start_time->format('Ymd\THis');
             $end = $appointment->end_time->format('Ymd\THis');
-            $summary = "Appointment with Dr. {$appointment->doctor->first_name} {$appointment->doctor->last_name} ({$appointment->doctor->specialization->name})";
-            $description = "Status: {$appointment->status}\\nNote: " . ($appointment->note ?? '');
+            $summary = "Termin kod Dr. {$appointment->doctor->first_name} {$appointment->doctor->last_name} ({$appointment->doctor->specialization->name})";
+            $description = "Status: {$appointment->status}\\nNapomena: " . ($appointment->note ?? '');
 
             $icsContent .= "BEGIN:VEVENT\r\n";
             $icsContent .= "UID:appointment-{$appointment->id}@myclinicapp.local\r\n";
@@ -456,7 +456,7 @@ class AppointmentController extends Controller
         // Ako nema rezultata, paginacija će vratiti praznu stranicu
         return PatientAppointmentResource::collection($appointments)
             ->additional([
-                'message' => $appointments->count() ? 'History loaded successfully.' : 'No completed appointments found.'
+                'message' => $appointments->count() ? 'Istorija uspešno učitana.' : 'Nema završenih termina.'
             ]);
     }
 
@@ -506,7 +506,7 @@ class AppointmentController extends Controller
 
         // 2. Proveri da li je termin u statusu 'scheduled'
         if ($appointment->status !== 'scheduled') {
-            return response()->json(['message' => 'Only scheduled appointments can be rejected.'], 400);
+            return response()->json(['message' => 'Samo zakazani termini mogu biti odbijeni.'], 400);
         }
 
         // 3. Odbij termin
@@ -520,12 +520,12 @@ class AppointmentController extends Controller
                 ->send(new AppointmentRejectedMail($appointment));
         } catch (Exception $e) {
             // Loguj grešku, ali ne prekidaj
-            Log::error('Failed to send appointment rejection email: ' . $e->getMessage());
+            Log::error('Neuspešno slanje emaila za odbijanje termina: ' . $e->getMessage());
         }
 
         // 5. Vrati poruku doktoru
         return response()->json([
-            'message' => 'Appointment successfully rejected.',
+            'message' => 'Termin uspešno odbijen.',
             'appointment' => $appointment
         ]);
     }
@@ -551,12 +551,12 @@ class AppointmentController extends Controller
 
         // 1. Termin mora biti zakazan
         if ($appointment->status !== 'scheduled') {
-            return response()->json(['message' => 'Only scheduled appointments can be completed.'], 400);
+            return response()->json(['message' => 'Samo zakazani termini mogu biti završeni.'], 400);
         }
 
         // 2. Termin mora biti u prošlosti
         if ($appointment->start_time->isFuture()) {
-            return response()->json(['message' => 'Appointment time has not passed yet.'], 400);
+            return response()->json(['message' => 'Vreme termina još nije prošlo.'], 400);
         }
 
         // 3. Ažuriranje termina
@@ -570,11 +570,11 @@ class AppointmentController extends Controller
             Mail::to($appointment->patient->email)->send(new AppointmentCompletedMail($appointment));
         } catch (Exception $e) {
             // Loguj grešku, ali ne prekidaj
-            Log::error('Failed to send note email: ' . $e->getMessage());
+            Log::error('Neuspešno slanje emaila za belešku: ' . $e->getMessage());
         }
 
         // 5. Povratna poruka
-        return response()->json(['message' => 'Appointment successfully marked as completed.']);
+        return response()->json(['message' => 'Termin uspešno označen kao završen.']);
     }
 
     /**
