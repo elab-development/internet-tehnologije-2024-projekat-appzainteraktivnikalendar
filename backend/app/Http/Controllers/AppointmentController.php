@@ -8,6 +8,7 @@ use App\Mail\AppointmentCompletedMail;
 use App\Mail\AppointmentRejectedMail;
 use App\Models\Appointment;
 use App\Models\DoctorSchedule;
+use App\Models\Notification;
 use App\Models\Specialization;
 use App\Models\User;
 use Carbon\Carbon;
@@ -513,11 +514,18 @@ class AppointmentController extends Controller
         $appointment->update([
             'status' => 'rejected'
         ]);
+        // sacuvaj notifikaciju
+        $notification = Notification::create([
+            'user_id' => $appointment->patient_id,
+            'message' => 'termin odbijen',
+            'sent' => false
+        ]);
 
         // 4. Pošalji email pacijentu
         try {
             Mail::to($appointment->patient->email)
                 ->send(new AppointmentRejectedMail($appointment));
+            $notification->update(['sent' => true]);
         } catch (Exception $e) {
             // Loguj grešku, ali ne prekidaj
             Log::error('Neuspešno slanje emaila za odbijanje termina: ' . $e->getMessage());
@@ -565,9 +573,16 @@ class AppointmentController extends Controller
             'note' => $request->note,
         ]);
 
+        $notification = Notification::create([
+            'user_id' => $appointment->patient_id,
+            'message' => 'pregled završen',
+            'sent' => false
+        ]);
+
         // 4. Slanje email notifikacije pacijentu
         try {
             Mail::to($appointment->patient->email)->send(new AppointmentCompletedMail($appointment));
+            $notification->update(['sent' => true]);
         } catch (Exception $e) {
             // Loguj grešku, ali ne prekidaj
             Log::error('Neuspešno slanje emaila za belešku: ' . $e->getMessage());
