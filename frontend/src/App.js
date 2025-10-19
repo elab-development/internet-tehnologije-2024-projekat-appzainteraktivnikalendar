@@ -19,6 +19,7 @@ import DoctorHistory from "./pages/doctor/DoctorHistory.jsx";
 import DoctorAppointments from "./pages/doctor/DoctorApointments.jsx";
 import AdminAddDoctor from "./pages/admin/AdminAddDoctor.jsx";
 import AdmiVewDoctors from "./pages/admin/AdminViewDoctors.jsx";
+import PasswordReset from "./pages/PasswordReset.jsx";
 
 function App() {
   useEffect(() => {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/doctor/appointments" element={<DoctorAppointments />} />
         <Route path="/admin/add-doctor" element={<AdminAddDoctor />} />
         <Route path="/admin/doctors" element={<AdmiVewDoctors />} />
+        <Route path="/reset-password" element={<PasswordReset />} />
       </Routes>
     </Router>
   );

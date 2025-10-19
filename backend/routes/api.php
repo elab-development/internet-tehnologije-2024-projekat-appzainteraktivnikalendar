@@ -12,12 +12,14 @@ use Illuminate\Support\Facades\Route;
  * --------------------------------------------------------------------------
  * JAVNE RUTE (PUBLIC ROUTES)
  * --------------------------------------------------------------------------
- * Rute dostupne svima (registracija, prijava, praznici).
+ * Rute dostupne svima (registracija, prijava, reset lozinke, praznici).
  */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+//Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/public-holidays', [PublicHolidayController::class, 'index']);
-
 
 /**
  * --------------------------------------------------------------------------

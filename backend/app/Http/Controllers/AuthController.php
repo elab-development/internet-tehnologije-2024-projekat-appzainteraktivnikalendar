@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Mail\PasswordResetMail;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Str;
 
 class AuthController extends Controller
 {
@@ -71,5 +76,50 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logged out successfully'
         ]);
+    }
+
+    // Send reset link
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email'),
+            function ($user, $token) use ($request) {
+                $frontendUrl = "http://localhost:3000/reset-password?token=$token&email=" . urlencode($request->email);
+
+                // send markdown email
+                Mail::to($request->email)->send(new PasswordResetMail($frontendUrl));
+            }
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => 'Email za reset lozinke poslat.'])
+            : response()->json(['message' => 'Ne mogu poslati email.'], 400);
+    }
+
+    // Reset password
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => 'Lozinka uspešno promenjena.'])
+            : response()->json(['message' => 'Neispravan token ili email.'], 400);
     }
 }
