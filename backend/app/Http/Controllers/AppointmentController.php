@@ -52,7 +52,7 @@ class AppointmentController extends Controller
         $appointments = $query->get();
 
         // 3. Vraćamo sve specijalnosti lekara (ne filtrirane)
-        $specializations = Specialization::select('id', 'name', 'color')->get();
+        $specializations = Specialization::select('id', 'name')->get();
 
         // 4. Vraćamo sve zajedno
         return response()->json([

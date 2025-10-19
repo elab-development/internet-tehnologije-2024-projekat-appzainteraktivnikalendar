@@ -32,7 +32,6 @@ class SpecializationFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->randomElement($this->specializations),
-            'color' => $this->faker->hexColor,
         ];
     }
 }

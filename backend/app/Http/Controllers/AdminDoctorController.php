@@ -66,14 +66,12 @@ class AdminDoctorController extends Controller
             'phone' => 'nullable|string|max:20',
             'specialty_id' => 'nullable|exists:specializations,id',
             'new_specialty_name' => 'nullable|string|max:255',
-            'new_specialty_color' => 'nullable|string|max:7',
         ]);
 
         // Ako admin šalje novu specijalnost
-        if ($request->filled('new_specialty_name') && $request->filled('new_specialty_color')) {
+        if ($request->filled('new_specialty_name')) {
             $specialty = Specialization::create([
                 'name' => $request->new_specialty_name,
-                'color' => $request->new_specialty_color,
             ]);
             $specialtyId = $specialty->id;
         } else {

@@ -9,7 +9,7 @@ class SpecializationController extends Controller
 {
     public function getSpecializations()
 {
-    $specializations = Specialization::select('id', 'name', 'color')->get();
+    $specializations = Specialization::select('id', 'name')->get();
 
     return response()->json([
         'specializations' => $specializations

@@ -33,7 +33,7 @@ const PatientCalendar = () => {
         const color =
           startTime < now
             ? "#b0b0b0"
-            : a.doctor.specialization?.color || "#007bff";
+            : "#007bff";
 
         return {
           id: a.id,

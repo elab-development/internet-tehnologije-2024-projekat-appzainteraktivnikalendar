@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Specialization extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'color'];
+    protected $fillable = ['name'];
 
     public function users()
     {
