@@ -465,15 +465,25 @@ class AppointmentController extends Controller
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function getDoctorAppointments()
+    public function getDoctorAppointments(Request $request)
     {
-        $user = Auth::user();
+        $doctorId = auth()->id();
+        $search = $request->query('search');
 
-        $appointments = Appointment::where('doctor_id', $user->id)
-            ->whereIn('status', ['scheduled', 'completed'])
-            ->with(['patient']) // učitamo celu pacijent relaciju
-            ->orderBy('start_time', 'asc')
-            ->get();
+        $query = Appointment::with('patient')
+            ->where('doctor_id', $doctorId)
+            ->whereIn('status', ['scheduled']);
+
+        if ($search) {
+            $query->whereHas('patient', function ($q) use ($search) {
+                $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $appointments = $query->orderBy('start_time', 'asc')->paginate(8);
 
         return DoctorAppointmentResource::collection($appointments);
     }

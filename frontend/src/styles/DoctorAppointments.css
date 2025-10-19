@@ -1,0 +1,51 @@
+/* src/styles/DoctorAppointments.css */
+.doctor-appointments-container {
+  padding: 40px;
+}
+
+.table-modern {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.table-modern thead {
+  background-color: #343a40;
+  color: white;
+  font-weight: 600;
+}
+
+.table-modern tbody tr {
+  background-color: #fff;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.table-modern tbody tr:hover {
+  background-color: #f1f3f5;
+  transform: translateY(-1px);
+}
+
+.table-modern th,
+.table-modern td {
+  vertical-align: middle;
+  padding: 12px 15px;
+}
+
+/* Prošli termini bez napomene */
+.needs-note {
+  background-color: #fff3cd !important;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { background-color: #fff3cd; }
+  50% { background-color: #ffe69c; }
+  100% { background-color: #fff3cd; }
+}
+
+/* Pagination */
+.pagination-wrapper button {
+  min-width: 80px;
+}
