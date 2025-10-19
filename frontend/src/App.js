@@ -5,10 +5,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-import { useEffect } from 'react';
-import './components/Navbar.jsx';
+import AOS from "aos";
+import "aos/dist/aos.css";
+import { useEffect } from "react";
+import "./components/Navbar.jsx";
 import Navbar from "./components/Navbar.jsx";
 import PatientDashboard from "./pages/dashboard/PatientDashboard.jsx";
 import DoctorDashboard from "./pages/dashboard/DoctorDashboard.jsx";
@@ -17,7 +17,8 @@ import PatientCalendar from "./pages/patient/PatientCalendar.jsx";
 import PatientHistory from "./pages/patient/PatientHistory.jsx";
 import DoctorHistory from "./pages/doctor/DoctorHistory.jsx";
 import DoctorAppointments from "./pages/doctor/DoctorApointments.jsx";
-
+import AdminAddDoctor from "./pages/admin/AdminAddDoctor.jsx";
+import AdmiVewDoctors from "./pages/admin/AdminViewDoctors.jsx";
 
 function App() {
   useEffect(() => {
@@ -37,6 +38,8 @@ function App() {
         <Route path="/patient/history" element={<PatientHistory />} />
         <Route path="/doctor/history" element={<DoctorHistory />} />
         <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+        <Route path="/admin/add-doctor" element={<AdminAddDoctor />} />
+        <Route path="/admin/doctors" element={<AdmiVewDoctors />} />
       </Routes>
     </Router>
   );
