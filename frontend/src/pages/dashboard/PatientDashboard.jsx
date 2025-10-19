@@ -6,7 +6,7 @@ import api from "../../api/api";
 import "../../styles/Dashboard.css"; // Zadržavamo vaš CSS fajl
 
 // Pomoćna komponenta za kartice/dugmad
-const DashboardCard = ({ 
+const DashboardCard = ({
   icon,
   title,
   text,
@@ -51,11 +51,11 @@ const DashboardPatient = () => {
   const handleExportICS = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/patient/appointments/export", {
-        responseType: "blob",
-      });
+      const response = await api.get("/patient/appointments/export");
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = new Blob([response.data], { type: "text/calendar" });
+
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", "appointments.ics");
@@ -63,10 +63,26 @@ const DashboardPatient = () => {
       link.click();
       link.remove();
     } catch (error) {
+      let errorMessage =
+        "Došlo je do nepoznate greške prilikom izvoza termina.";
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 404 && data?.message) {
+          errorMessage = data.message;
+        } else if (data?.message) {
+          errorMessage = `Greška ${status}: ${data.message}`;
+        } else {
+          errorMessage = `Server je vratio grešku ${status}. Molimo pokušajte ponovo.`;
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Nema odgovora sa servera. Proverite internet vezu ili status servera.";
+      }
+
       console.error("Greška pri izvozu termina:", error);
-      alert(
-        "Došlo je do greške prilikom izvoza termina. Molimo pokušajte ponovo."
-      );
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
