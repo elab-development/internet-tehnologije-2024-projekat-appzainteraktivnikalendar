@@ -7,9 +7,6 @@
     "@fullcalendar/core": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
     "aos": "^2.3.4",
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
@@ -46,5 +43,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "babel-jest": "^30.2.0",
+    "jest": "^27.5.1"
   }
 }
