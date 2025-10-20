@@ -63,7 +63,7 @@ Frontend deo aplikacije pokreće se na portu **3000**, dok se backend (Laravel) 
 5. Napraviti `.env` fajl (ako ne postoji) i podesiti osnovne parametre:
 
    ```env
-   APP_NAME=ClinicApp
+   APP_NAME=Sinergija Zdravlja
    APP_ENV=local
    APP_KEY=
    APP_DEBUG=true
@@ -75,6 +75,15 @@ Frontend deo aplikacije pokreće se na portu **3000**, dok se backend (Laravel) 
    DB_DATABASE=clinic_db
    DB_USERNAME=root
    DB_PASSWORD=
+
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp.example.com
+   MAIL_PORT=587
+   MAIL_USERNAME=your_email@example.com
+   MAIL_PASSWORD=your_password
+   MAIL_ENCRYPTION=tls
+   MAIL_FROM_ADDRESS=your_email@example.com
+   MAIL_FROM_NAME=${APP_NAME}
 
    SANCTUM_STATEFUL_DOMAINS=localhost:3000
    FRONTEND_URL=http://localhost:3000
@@ -125,8 +134,8 @@ Backend API: **[http://localhost:8000/api](http://localhost:8000/api)**
 
 ## 🧠 Funkcionalnosti sistema
 
-* 👨‍⚕️ **Administratori** – upravljaju lekarima, specijalizacijama i korisnicima.
-* 🩺 **Lekari** – pregledaju i ažuriraju svoje termine, definišu raspored po danima.
-* 👩‍💻 **Pacijenti** – pretražuju lekare, zakazuju i otkazuju termine.
-* 🔔 **Notifikacije** – korisnici dobijaju obaveštenja o terminima.
-* 🕒 **Raspored rada** – sistem prikazuje dostupne dane i vreme rada lekara.
+* 👨‍⚕️ **Administratori** – upravljaju lekarima i njihovim radnim vremenom.
+* 🩺 **Lekari** – pregledaju i ažuriraju svoje zakazane termine, sa mogućnosti da odbiju termin ili dodaju napomenu.
+* 👩‍💻 **Pacijenti** – imaju pristup ličnom interaktivnom kalendaru na kom mogu da zakazuju, otkazuju ili menjaju termine.
+* 🔔 **Notifikacije** – pacijenti dobijaju obaveštenja o otkazanim terminima ili napomenama doktora o njihovom zdravlju.
+* 📅 Preuzimanje termina – pacijenti mogu da preuzmu svoje zakazane termine u .ics formatu i dodaju ih u lični kalendar (Google Calendar, Outlook itd.).
