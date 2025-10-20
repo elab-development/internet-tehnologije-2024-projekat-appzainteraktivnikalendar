@@ -63,7 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
      * Rute dostupne samo korisnicima sa ulogom 'doctor'.
      */
     Route::prefix('doctor')->middleware('role:doctor')->group(function () {
-        // LIČNI KALENDAR I TERMINI
+        // ZAKAZANI TERMINI
         Route::get('/appointments', [AppointmentController::class, 'getDoctorAppointments']);
 
         // UPRAVLJANJE TERMINIMA
