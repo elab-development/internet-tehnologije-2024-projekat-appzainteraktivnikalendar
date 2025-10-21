@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Models\DoctorSchedule;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Carbon\Carbon;
 
 class AppointmentFactory extends Factory
 {
@@ -13,7 +14,6 @@ class AppointmentFactory extends Factory
 
     public function definition()
     {
-        // 1. Pick a random doctor schedule first
         $schedule = DoctorSchedule::inRandomOrder()->first();
         if (!$schedule) {
             throw new \Exception('No doctor schedules found.');
@@ -24,17 +24,24 @@ class AppointmentFactory extends Factory
             throw new \Exception('Doctor not found for schedule ' . $schedule->id);
         }
 
-        // 2. Pick a random patient
         $patient = User::where('role', 'patient')->inRandomOrder()->first();
         if (!$patient) {
             throw new \Exception('No patients found.');
         }
 
-        // 3. Pick a date that matches the schedule day
         $dayOfWeek = $schedule->day_of_week;
-        $date = $this->faker->dateTimeBetween('next ' . ucfirst($dayOfWeek), '+1 month');
 
-        // 4. Generate available slots
+        // Randomly decide between past and future appointment
+        $isPast = $this->faker->boolean(40);
+
+        if ($isPast) {
+            // Past date within the last month
+            $date = $this->faker->dateTimeBetween('-1 month', 'last ' . ucfirst($dayOfWeek));
+        } else {
+            // Future date within the next month
+            $date = $this->faker->dateTimeBetween('next ' . ucfirst($dayOfWeek), '+1 month');
+        }
+
         $startTime = $schedule->start_time->getTimestamp();
         $endTime = $schedule->end_time->getTimestamp();
 
@@ -53,22 +60,28 @@ class AppointmentFactory extends Factory
         }
 
         if (empty($slots)) {
-            // pick the first available date in the next month for this schedule
-            // or throw an exception if you want stricter control
             return $this->definition(); // retry recursively
         }
 
-        // 5. Pick a random free slot
         $slot = $this->faker->randomElement($slots);
         $start = (clone $date)->setTime(date('H', $slot), date('i', $slot));
         $end = (clone $start)->modify('+30 minutes');
+
+        $now = Carbon::now();
+
+        // Prevent "completed" if appointment is in the future
+        if ($start > $now) {
+            $statusOptions = ['scheduled', 'canceled', 'rejected'];
+        } else {
+            $statusOptions = ['scheduled', 'canceled', 'rejected', 'completed'];
+        }
 
         return [
             'doctor_id' => $doctor->id,
             'patient_id' => $patient->id,
             'start_time' => $start,
             'end_time' => $end,
-            'status' => $this->faker->randomElement(['scheduled', 'canceled', 'rejected', 'completed']),
+            'status' => $this->faker->randomElement($statusOptions),
             'note' => $this->faker->optional()->sentence,
         ];
     }
