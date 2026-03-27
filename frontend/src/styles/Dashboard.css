@@ -1,0 +1,59 @@
+/* CONTAINER & TITLE STYLES */
+.dashboard-container {
+    text-align: center;
+    padding: 40px 20px;
+    /* Minimalnija, moderna pozadina */
+    background: #f8f9fa; /* Vrlo svetlo siva */
+    min-height: 80vh; 
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #343a40; /* Tamniji tekst za kontrast */
+    font-weight: 700;
+}
+
+.lead {
+    color: #6c757d;
+}
+
+/* DASHBOARD CARDS STYLES */
+.dashboard-cards-row {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.dashboard-card {
+    /* Senka za 3D efekat */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    border-radius: 12px;
+    cursor: pointer;
+    /* Glatka tranzicija za interakciju */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px); /* Blago podizanje */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Jača senka */
+}
+
+/* Stilizacija ikona unutar kartice */
+.icon-wrapper svg {
+    /* Povećavamo ikone i dajemo im boju teme */
+    color: var(--bs-primary); 
+}
+
+.dashboard-card.secondary .icon-wrapper svg {
+    color: var(--bs-secondary);
+}
+
+.dashboard-card.success .icon-wrapper svg {
+    color: var(--bs-success);
+}
+
+/* Stilizacija za Dugme (samo za ICS export, ostale kartice su clickable) */
+.dashboard-card .btn {
+    border-radius: 8px;
+    font-weight: 600;
+}
