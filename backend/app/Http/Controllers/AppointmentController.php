@@ -223,7 +223,7 @@ class AppointmentController extends Controller
         }
 
         // 2. Proveri da li doktor radi taj dan i u to vreme
-        $dayOfWeek = $startTime->format('l');
+        $dayOfWeek = strtolower($startTime->format('l'));
         $schedule = DoctorSchedule::where('doctor_id', $doctorId)
             ->where('day_of_week', $dayOfWeek)
             ->first();
